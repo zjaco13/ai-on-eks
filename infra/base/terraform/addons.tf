@@ -330,6 +330,7 @@ module "data_addons" {
   enable_aws_neuron_device_plugin = true
 
   aws_neuron_device_plugin_helm_config = {
+    version = 1.1.1
     # Enable default scheduler
     values = [
       <<-EOT
