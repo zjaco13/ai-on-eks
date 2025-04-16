@@ -27,8 +27,8 @@ variable "vpc_cidr" {
 # Note you can only /16 range to VPC. You can add multiples of /16 if required
 variable "secondary_cidr_blocks" {
   description = "Secondary CIDR blocks to be attached to VPC"
-  default = ["100.64.0.0/16"]
-  type = list(string)
+  default     = ["100.64.0.0/16"]
+  type        = list(string)
 }
 
 variable "enable_database_subnets" {
