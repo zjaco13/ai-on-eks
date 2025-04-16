@@ -1,5 +1,6 @@
 ---
 sidebar_label: EMR NVIDIA Spark-RAPIDS
+sidebar_position: 4
 ---
 import CollapsibleContent from '../../../src/components/CollapsibleContent';
 
@@ -199,7 +200,7 @@ Here, we will utilize a helper shell script to execute the job. This script requ
 This script will ask for certain inputs that you can obtain from Terraform outputs. See the example below.
 
 ```bash
-cd ai-ml/emr-spark-rapids/examples/xgboost/ && chmod +x execute_spark_rapids_xgboost.sh
+cd ai-on-eks/infra/emr-spark-rapids/examples/xgboost/ && chmod +x execute_spark_rapids_xgboost.sh
 ./execute_spark_rapids_xgboost.sh
 
 # Example inputs shown below
