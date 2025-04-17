@@ -1,6 +1,5 @@
 ---
 sidebar_label: EMR NVIDIA Spark-RAPIDS
-sidebar_position: 4
 ---
 import CollapsibleContent from '../../../src/components/CollapsibleContent';
 

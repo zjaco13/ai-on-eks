@@ -1,6 +1,5 @@
 ---
 sidebar_label: Trainium on EKS
-sidebar_position: 3
 ---
 import CollapsibleContent from '../../../src/components/CollapsibleContent';
 

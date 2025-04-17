@@ -1,6 +1,5 @@
 ---
 sidebar_label: JupyterHub on EKS
-sidebar_position: 2
 ---
 import CollapsibleContent from '../../../src/components/CollapsibleContent';
 
