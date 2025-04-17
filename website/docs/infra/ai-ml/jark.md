@@ -158,7 +158,7 @@ nvidia-device-plugin   nvidia-device-plugin-node-feature-discovery-master   1/1 
 
 :::info
 
-Please refer to [AI](https://awslabs.github.io/http:/ai-on-eks/docs/blueprints) page for deploying AI models on EKS.
+Please refer to [AI](https://awslabs.github.io/ai-on-eks/docs/blueprints) page for deploying AI models on EKS.
 
 :::
 
