@@ -74,7 +74,5 @@ def evaluate_models(dataset, tokenizer, base_model, tuned_model, indices):
         print("BASE MODEL:\n", tokenizer.decode(base_output[0][prompt_len:]), "\n")
         print("FINE-TUNED MODEL:\n", tokenizer.decode(tuned_output[0][prompt_len:]), "\n")
 
-        _ = input("Press <ENTER> to continue")
-
 if __name__ == "__main__":
     main()
