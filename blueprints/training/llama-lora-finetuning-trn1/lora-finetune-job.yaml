@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: lora-finetune-app
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  template:
+    spec:
+      containers:
+        - name: app
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/llm-finetune/llama-finetuning-trn:feature-lora
+          command: ['/bin/bash']
+          args:
+            [
+              '-c',
+              'chmod +x /scripts/llama3_finetuning.sh && /scripts/llama3_finetuning.sh > /shared/llama3_lora_finetuning_out.txt 2>&1',
+            ]
+          volumeMounts:
+            - name: persistent-storage
+              mountPath: /shared
+            - name: dshm
+              mountPath: /dev/shm
+            - name: script-volume
+              mountPath: /scripts
+          resources:
+            limits:
+              aws.amazon.com/neuron: '16'
+            requests:
+              aws.amazon.com/neuron: '16'
+      volumes:
+        - name: persistent-storage
+          persistentVolumeClaim:
+            claimName: fsx-static-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+        - name: script-volume
+          configMap:
+            name: llama3-finetuning-script
+            defaultMode: 0755
+      restartPolicy: Never
+      nodeSelector:
+        type: karpenter
+        instanceType: trainium-trn1
+      tolerations:
+        - key: 'aws.amazon.com/neuron'
+          value: 'true'
+          effect: 'NoSchedule'

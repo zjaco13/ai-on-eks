@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llama3-finetuning-script
+data:
+  llama3_finetuning.sh: |-
+    #!/bin/bash
+
+    git clone https://github.com/ai-on-eks.git
+
+    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/finetune_llama.py .
+    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/consolidate_adapter_shards_and_merge_model.py .
+    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/test_model.py .
+
+    rm -rf ./ai-on-eks
+
+    export FINETUNED_SHARDED_MODEL_DIR="./finetuned_sharded_model"
+    export FINETUNED_CONSOLIDATED_MODEL_DIR="./finetuned_consolidated_model"
+
+    torchrun \
+        --nproc_per_node=32 \
+        finetune_llama.py \
+        --output_dir $FINETUNED_SHARDED_MODEL_DIR \
+        --tensor_parallel_size 8 \
+        --bf16 True \
+        --per_device_train_batch_size 8 \
+        --gradient_accumulation_steps 1 \
+        --gradient_checkpointing True \
+        --max_steps 250 \
+        --logging_steps 10 \
+        --learning_rate 1e-5 \
+        --dataloader_drop_last True
+
+    echo "\n\nModel fine-tuning completed. Fine-tuned sharded model stored at: $FINETUNED_SHARDED_MODEL_DIR\n"
+
+    echo "\n\n-----------------Conslidating the shards of the fine-tuned model----------------\n"
+    python3 ./consolidate_adapter_shards_and_merge_model.py -i $FINETUNED_SHARDED_MODEL_DIR/checkpoint-250 -o $FINETUNED_CONSOLIDATED_MODEL_DIR
+    echo "\n\nFine-tuned consolidated model stored at: $FINETUNED_CONSOLIDATED_MODEL_DIR\n"
+
+    echo "\n\n-----------------Starting a test run with the fine-tuned model------------------\n"
+    python3 ./test_model.py --tuned-model $FINETUNED_CONSOLIDATED_MODEL_DIR
+    echo "\n\nTest run completed"
+
+    echo "\n\n copying model to shared folder\n"
+    cp -r $FINETUNED_CONSOLIDATED_MODEL_DIR /shared
