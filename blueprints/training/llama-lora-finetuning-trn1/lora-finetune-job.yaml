@@ -14,8 +14,14 @@ spec:
           args:
             [
               '-c',
-              'chmod +x /scripts/llama3_finetuning.sh && /scripts/llama3_finetuning.sh > /shared/llama3_lora_finetuning_out.txt 2>&1',
+              '/scripts/llama3_finetuning.sh > /shared/llama3_lora_finetuning_out.txt 2>&1',
             ]
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-secret
+                  key: HF_TOKEN
           volumeMounts:
             - name: persistent-storage
               mountPath: /shared
