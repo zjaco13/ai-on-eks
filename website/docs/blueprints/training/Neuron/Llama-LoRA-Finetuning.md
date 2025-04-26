@@ -4,69 +4,61 @@ sidebar_label: Llama 3 Fine-tuning with LoRA
 import CollapsibleContent from '../../../../src/components/CollapsibleContent';
 
 :::warning
-Deployment of ML models on EKS requires access to GPUs or Neuron instances. If your deployment isn't working, it's often due to missing access to these resources. Also, some deployment patterns rely on Karpenter autoscaling and static node groups; if nodes aren't initializing, check the logs for Karpenter or Node groups to resolve the issue.
+To deploy ML models on EKS, you need access to GPUs or Neuron instances. If deployment fails, check if you have access to these resources. If nodes aren't starting, check Karpenter or Node group logs.
 :::
 
 :::danger
-
-Note: Use of this Llama 3 model is governed by the Meta license.
-In order to download the model weights and tokenizer, please visit the [website](https://ai.meta.com/) and accept the license before requesting access.
-
+Note: The Llama 3 model is governed by the Meta license. To download the model weights and tokenizer, visit the [website](https://ai.meta.com/) and accept the license before requesting access.
 :::
 
 :::info
-
-We are actively enhancing this blueprint to incorporate improvements in observability, logging, and scalability aspects.
-
+We are working to improve this blueprint with better observability, logging, and scalability.
 :::
 
 # Llama 3 fine-tuning on Trn1 with HuggingFace Optimum Neuron
 
-This comprehensive guide walks you through the steps for fine-tuning the `Llama3-8B` language model using AWS Trainium (Trn1) EC2 instances. The fine-tuning process is facilitated by HuggingFace Optimum Neuron, a powerful library that simplifies the integration of Neuron into your training pipeline.
+This guide shows you how to fine-tune the `Llama3-8B` language model using AWS Trainium (Trn1) EC2 instances. We'll use HuggingFace Optimum Neuron to make integration with Neuron easy.
 
 ### What is Llama 3?
 
-Llama 3 is a state-of-the-art large language model (LLM) designed for various natural language processing (NLP) tasks, including text generation, summarization, translation, question answering, and more. It's a powerful tool that can be fine-tuned for specific use cases.
+Llama 3 is a large language model (LLM) for tasks like text generation, summarization, translation, and question answering. You can fine-tune it for your specific needs.
 
 #### AWS Trainium:
-- **Optimized for Deep Learning**: AWS Trainium-based Trn1 instances are specifically designed for deep learning workloads. They offer high throughput and low latency, making them ideal for training large-scale models like Llama 3. Trainium chips provide significant performance improvements over traditional processors, accelerating training times.
-- **Neuron SDK**: The AWS Neuron SDK is tailored to optimize your deep learning models for Trainium. It includes features like advanced compiler optimizations and support for mixed precision training, which can further accelerate your training workloads while maintaining accuracy.
+- **Optimized for Deep Learning**: AWS Trainium Trn1 instances are built for deep learning. They offer high throughput and low latency, making them great for training large models like Llama 3.
+- **Neuron SDK**: The AWS Neuron SDK helps optimize your models for Trainium. It includes advanced compiler optimizations and supports mixed precision training for faster results without losing accuracy.
 
 ## 1. Deploying the Solution
 
 <CollapsibleContent header={<h2><span>Prerequisites</span></h2>}>
-Before we begin, you will need to ensure you have all the prerequisites in place to make the deployment process smooth and hassle-free. You will need a machine from where you will be driving this solution deployment. You can use a local Mac/Windows machine or an Amazon EC2 machine. Ensure that you have Docker installed locally with storage above 100GB and that the image is created with x86 architecture.
+Before you start, make sure you have everything you need:
+- You can use your local Mac/Windows computer or an Amazon EC2 instance.
+- Install Docker (with at least 100GB free space) and make sure your Docker image uses x86 architecture.
+- Install these tools and make sure your AWS user or role has the right permissions:
+  * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+  * [kubectl](https://Kubernetes.io/docs/tasks/tools/)
+  * [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+  * Git (only for EC2 instance)
+  * Python, pip, jq, unzip
 
-Ensure that you have installed the following tools and have the required IAM permissions for the user/role you'll be using to deploy and run this solution.
+**Clone the ai-on-eks repository:**
 
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-* [kubectl](https://Kubernetes.io/docs/tasks/tools/)
-* [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
-* Git(Only for EC2 instance)
-* Docker
-* Python, pip, jq, unzip
-
-
-**Clone the ai-on-eks repository**
-
-After tackling the pre-requisites, let's get started by cloning the ai-on-eks github repository.
+Once you have the prerequisites, clone the ai-on-eks GitHub repository:
 
 ```bash
 git clone https://github.com/awslabs/ai-on-eks.git
 ```
 
-**Navigate to the trainium-inferentia directory.**
+**Go to the trainium-inferentia directory:**
 
 ```bash
 cd ai-on-eks/infra/trainium-inferentia
 ```
 
-Set the region value within the `blueprint.tfvars` variables file under the `terraform` sub-folder to match your preference.
+In the `terraform` sub-folder, set your preferred AWS region in the `blueprint.tfvars` file.
 
-**NOTE:** Trainium instances are available in select regions, and the user can determine this list of regions using the commands outlined [here](https://repost.aws/articles/ARmXIF-XS3RO27p0Pd1dVZXQ/what-regions-have-aws-inferentia-and-trainium-instances) on re:Post.
+**Note:** Trainium instances are only available in certain regions. You can check which regions support them [here](https://repost.aws/articles/ARmXIF-XS3RO27p0Pd1dVZXQ/what-regions-have-aws-inferentia-and-trainium-instances).
 
-
-Run the installation script to provision an EKS cluster with all the add-ons needed for the solution.
+Run the installation script to set up an EKS cluster with all required add-ons:
 
 ```bash
 ./install.sh
@@ -74,7 +66,7 @@ Run the installation script to provision an EKS cluster with all the add-ons nee
 
 ### Verify the resources
 
-Verify the Amazon EKS Cluster after substituting the region value with the region you entered in the step above when setting up the infrastructure with terraform.
+Check that your EKS cluster is running in the region you set earlier:
 
 ```bash
 aws eks --region <region> describe-cluster --name trainium-inferentia
@@ -91,46 +83,45 @@ kubectl get nodes # Output shows the EKS Managed Node group nodes
 
 ## 2. Build the Docker Image
 
-We'll build the docker image that will be used by the container to run Llama 3 fine-tuning. Execute the below commands after ensuring you are in the root folder of the ai-on-eks repository.
+Build the Docker image for Llama 3 fine-tuning. Run these commands from the root of the ai-on-eks repository:
 
-**NOTE:** Before running the docker image builder script, make sure the AWS user or principal used to run the script has proper access to the ECR repository in the specific region you selected earlier. The script will create a repo and push the image into it.
+**Note:** Make sure your AWS user has access to the ECR repository in your chosen region. The script will create the repo and push the image for you.
 
 ```bash
 cd blueprints/training/llama-lora-finetuning-trn1
 ./build-container-image.sh
 ```
-Enter the same region you provided in the above step, when prompted for it. After running this script, note the Docker image URL and tag that gets displayed at the end of the run. You will need this information for the next step.
+When prompted, enter the same region you used earlier. After the script finishes, note the Docker image URL and tag for the next step.
 
 ## 3. Launch the Llama training job
 
-Before launching the fine-tuning job, we'll need to set up a kubernetes Secret, a Configmap to mount the training script in the container, and update the container image URL in the Job specification.
+Before starting the fine-tuning job, set up a Kubernetes Secret, a ConfigMap for the training script, and update the container image URL in the job spec.
 
-In order for the training script to download the Llama3 model from HuggingFace, you need to provide your HuggingFace token. The access token can be found under Settings → Access Tokens on the Hugging Face website after you login to the HuggingFace website. This token will be served to the training container as a kubernetes Secret. For this we need to declare the secret by running the below create secret using kubectl.
+To let the training script download the Llama 3 model from Hugging Face, you need your Hugging Face access token (find it under Settings → Access Tokens on the Hugging Face website). Create a Kubernetes Secret with this token:
 
 ```bash
 kubectl create secret generic huggingface-secret --from-literal=HF_TOKEN=<HF_TOKEN>
 ```
 
-The Job spec also uses a ConfigMap to be able to get the training script mounted into the training container. Run the apply command to create this ConfigMap.
+Create the ConfigMap for the training script:
 
 ```bash
 kubectl apply -f llama3-finetuning-script-configmap.yaml
 ```
 
-Update the container image value in the `lora-finetune-job.yaml` file with the Docker image URL and tag obtained from the previous step.
+Update the `lora-finetune-job.yaml` file with your Docker image URL and tag.
 
-Once the corresponding pod is in 'Running' state, you can monitor the progress of the fine-tuning job by accessing the log file that's written to the FSx for Lustre(FSx-L) filesystem under the `/shared` folder. The fine-tuned model will also be saved in a subfolder named `llama3_tuned_model_<timestamp>`.
+When the pod is running, you can monitor the fine-tuning job by checking the log file in the `/shared` folder on FSx for Lustre. The fine-tuned model will be saved in a folder named `llama3_tuned_model_<timestamp>`.
 
-The training script runs a basic test at the end by passing in a few natural language prompts to compare how the fine-tuned model compares against the base model. This is captured in the output log from the training script and is made available along side the model artifacts folder using a similar naming scheme `llama3_finetuning_<timestamp>.out`.
+At the end, the script tests the fine-tuned model with some example prompts. The results are saved in a log file named like `llama3_finetuning_<timestamp>.out` next to the model folder.
 
-For your convenience, you can get on an interactive shell of a utility pod to access the FSx-L filesystem to view the fine-tuning log and resulting fine-tuned model. Let's create this pod before launching the training job.
-
+You can use a utility pod to access the FSx-L filesystem and view the logs and model files. Create this pod before starting the training job:
 
 ```bash
 kubectl apply -f training-artifact-access-pod.yaml
 ```
 
-We are now ready to apply the lora-finetune-job spec in the EKS cluster, which will launch our fine-tuning job.
+Now you can launch the fine-tuning job:
 
 ```bash
 kubectl apply -f lora-finetune-job.yaml
@@ -138,33 +129,32 @@ kubectl apply -f lora-finetune-job.yaml
 
 ## 4. Verify fine-tuning
 
-**Verify the Job Status:**
+Check the job status:
 
 ```bash
 kubectl get jobs
-
 ```
 
-**NOTE:** If the container fails to get scheduled, check the Karpenter logs for errors. Besides hitting resource limits or other common reasons, it's also possible that the infrastructure that was setup in the initial step through terraform ended up choosing a subnet whose AZ doesn't have trn1.32xlarge compute capacity. In such cases, you will need to update the `trainium-trn1` EC2NodeClass's subnet to one that is associated with an AZ that has capacity. You can find this EC2NodeClass definition in the `addons.tf` that gets copied under `infra/trainium-inferentia/terraform` folder. You'll need to re-run the `install.sh` script in that folder after making this update and then see if the pod gets scheduled in the new AZ/subnet by Karpenter.
+**Note:** If the container doesn't get scheduled, check the Karpenter logs for errors. Sometimes, the subnet chosen during setup doesn't have enough trn1.32xlarge capacity. If needed, update the `trainium-trn1` EC2NodeClass subnet in `addons.tf` (in `infra/trainium-inferentia/terraform`), re-run `install.sh`, and try again.
 
-Let's hop on an interactive shell of the utiliy pod to monitor the progress of the fine-tuning job and verify that the fine-tuned model gets written to the output folder, and the example prompts generate the corresponding SQL query.
+To monitor the log for the fine-tuning job, access the tuned model, or check the generated text-to-SQL outputs from the test run with the fine-tuned model, open a shell in the utility pod and navigate to the `/shared`  folder where these can be found.
 
 ```bash
 kubectl exec -it training-artifact-access-pod -- /bin/bash
 
 cd /shared
 
-ls -l llama3*
+ls -l llama3_tuned_model* llama3_finetuning*
 ```
 
 ### Cleaning up
 
-**NOTE:** Please ensure to run the delete steps above and the cleanup script. This is even more important when running AWS accelerated EC2 compute instances for training/inference. Running those steps will allow for resources to get cleaned up afterwards in order to avoid additional cost in your AWS bill.
+**Note:** Always run the cleanup steps to avoid extra AWS costs.
 
-To remove the resources created using this solution, execute the below commands after ensuring you are in the root folder of the ai-on-eks repository.
+To remove the resources created by this solution, run these commands from the root of the ai-on-eks repository:
 
 ```bash
-# Delete the Kubernetes Resources:
+# Delete the Kubernetes resources:
 cd blueprints/training/llama-lora-finetuning-trn1
 kubectl delete -f lora-finetune-job.yaml
 kubectl delete -f llama3-finetuning-script-configmap.yaml
@@ -172,17 +162,15 @@ kubectl delete secret huggingface-secret
 kubectl delete -f training-artifact-access-pod.yaml
 ```
 
-After ensuring there isn't any other dependencies on the below ECR repo and the images within it, delete the ECR repository
+After making sure there are no other dependencies, delete the ECR repository and images:
 
 ```bash
-
 aws ecr batch-delete-image --repository-name llm-finetune/llama-finetuning-trn --image-ids imageTag=latest --region $(cat .eks_region)
-#
 # Then delete the empty repository:
 aws ecr delete-repository --repository-name llm-finetune/llama-finetuning-trn --region $(cat .eks_region)
 ```
 
-Clean Up the EKS Cluster and Associated Resources:
+Clean up the EKS cluster and related resources:
 
 ```bash
 cd ../../../infra/trainium-inferentia/terraform
