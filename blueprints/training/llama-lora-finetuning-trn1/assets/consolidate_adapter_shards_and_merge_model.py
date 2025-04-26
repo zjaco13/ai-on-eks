@@ -24,7 +24,7 @@ args = parser.parse_args()
 
 consolidated_ckpt_dir = os.path.join(args.input_dir, "consolidated")
 
-# Consolidate the adapter shards into a PEFT-compatible checkpoint
+print("Consolidating the adapter shards into a PEFT-compatible checkpoint")
 consolidate_model_parallel_checkpoints_to_unified_checkpoint(
     args.input_dir, consolidated_ckpt_dir
 )
@@ -36,10 +36,10 @@ copyfile(
 # Load AutoPeftModel using the consolidated PEFT checkpoint
 peft_model = peft.AutoPeftModelForCausalLM.from_pretrained(consolidated_ckpt_dir)
 
-# Merge adapter weights into base model, save new pretrained model
+print("Meging adapter weights into base model and saving new pretrained model")
 merged_model = peft_model.merge_and_unload()
 merged_model.save_pretrained(args.output_dir)
 
-# Load the pretrained model and print config
+print("Loading the pretrained model and printing model")
 model = AutoModel.from_pretrained(args.output_dir)
 print(model)

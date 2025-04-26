@@ -6,6 +6,9 @@ data:
   llama3_finetuning.sh: |-
     #!/bin/bash
 
+    # Capture the model output directory name from the first argument
+    MODEL_OUTPUT_DIR_ARG=$1
+
     git clone https://github.com/ai-on-eks.git
 
     cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/finetune_llama.py .
@@ -15,7 +18,7 @@ data:
     rm -rf ./ai-on-eks
 
     export FINETUNED_SHARDED_MODEL_DIR="./finetuned_sharded_model"
-    export FINETUNED_CONSOLIDATED_MODEL_DIR="./finetuned_consolidated_model"
+    export FINETUNED_MERGED_MODEL_DIR="./finetuned_merged_model"
 
     torchrun \
         --nproc_per_node=32 \
@@ -31,15 +34,15 @@ data:
         --learning_rate 1e-5 \
         --dataloader_drop_last True
 
-    echo "\n\nModel fine-tuning completed. Fine-tuned sharded model stored at: $FINETUNED_SHARDED_MODEL_DIR\n"
+    echo -e "\n\nModel fine-tuning completed. Fine-tuned sharded model stored at: $FINETUNED_SHARDED_MODEL_DIR\n"
 
-    echo "\n\n-----------------Conslidating the shards of the fine-tuned model----------------\n"
-    python3 ./consolidate_adapter_shards_and_merge_model.py -i $FINETUNED_SHARDED_MODEL_DIR/checkpoint-250 -o $FINETUNED_CONSOLIDATED_MODEL_DIR
-    echo "\n\nFine-tuned consolidated model stored at: $FINETUNED_CONSOLIDATED_MODEL_DIR\n"
+    echo -e "\n\nConsolidating the shards of the fine-tuned model\n"
+    python3 ./consolidate_adapter_shards_and_merge_model.py -i $FINETUNED_SHARDED_MODEL_DIR/checkpoint-250 -o $FINETUNED_MERGED_MODEL_DIR
+    echo -e "\n\nFine-tuned merged model stored at: $FINETUNED_MERGED_MODEL_DIR\n"
 
-    echo "\n\n-----------------Starting a test run with the fine-tuned model------------------\n"
-    python3 ./test_model.py --tuned-model $FINETUNED_CONSOLIDATED_MODEL_DIR
-    echo "\n\nTest run completed"
+    echo -e "\n\nStarting a test run with the fine-tuned model\n"
+    python3 ./test_model.py --tuned-model $FINETUNED_MERGED_MODEL_DIR
+    echo -e "\n\nTest run completed"
 
-    echo "\n\n copying model to shared folder\n"
-    cp -r $FINETUNED_CONSOLIDATED_MODEL_DIR /shared
+    echo -e "\n\n saving fine-tuned model to output folder: $MODEL_OUTPUT_DIR_ARG"
+    mv $FINETUNED_MERGED_MODEL_DIR $MODEL_OUTPUT_DIR_ARG

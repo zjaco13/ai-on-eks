@@ -10,12 +10,12 @@ spec:
       containers:
         - name: app
           image: <account-id>.dkr.ecr.<region>.amazonaws.com/llm-finetune/llama-finetuning-trn:feature-lora
-          command: ['/bin/bash']
+          command: ['/bin/bash', '-c']
           args:
-            [
-              '-c',
-              '/scripts/llama3_finetuning.sh > /shared/llama3_lora_finetuning_out.txt 2>&1',
-            ]
+            - |-
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S); \
+              MODEL_OUTPUT_DIR="/shared/llama3_tuned_model_$TIMESTAMP"; \
+              /scripts/llama3_finetuning.sh "$MODEL_OUTPUT_DIR" > /shared/llama3_finetuning_"$TIMESTAMP".out 2>&1
           env:
             - name: HUGGING_FACE_HUB_TOKEN
               valueFrom:
