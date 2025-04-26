@@ -155,6 +155,13 @@ module "eks_blueprints_addons" {
     values     = [templatefile("${path.module}/helm-values/argo-events-values.yaml", {})]
   }
 
+  enable_argocd = var.enable_argocd
+  argocd = {
+    name       = "argocd"
+    namespace  = "argocd"
+    repository = "https://argoproj.github.io/argo-helm"
+  }
+
   #---------------------------------------
   # Prometheus and Grafana stack
   #---------------------------------------
