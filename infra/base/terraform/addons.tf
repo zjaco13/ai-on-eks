@@ -128,7 +128,7 @@ module "eks_blueprints_addons" {
     }
   }
   karpenter = {
-    chart_version       = "1.2.1"
+    chart_version       = "1.3.3"
     repository_username = data.aws_ecrpublic_authorization_token.token.user_name
     repository_password = data.aws_ecrpublic_authorization_token.token.password
     source_policy_documents = [
@@ -534,7 +534,7 @@ module "data_addons" {
       clusterName: ${module.eks.cluster_name}
       ec2NodeClass:
         amiSelectorTerms:
-          - alias: al2023@latest
+          - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
           id: ${module.vpc.private_subnets[2]}
@@ -593,7 +593,7 @@ module "data_addons" {
       clusterName: ${module.eks.cluster_name}
       ec2NodeClass:
         amiSelectorTerms:
-          - alias: al2023@latest
+          - alias: bottlerocket@latest
         karpenterRole: ${split("/", module.eks_blueprints_addons.karpenter.node_iam_role_arn)[1]}
         subnetSelectorTerms:
           id: ${module.vpc.private_subnets[2]}
