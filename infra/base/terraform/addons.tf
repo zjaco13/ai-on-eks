@@ -600,7 +600,7 @@ module "data_addons" {
         securityGroupSelectorTerms:
           tags:
             Name: ${module.eks.cluster_name}-node
-        blockDevice:
+        blockDeviceMappings:
           # Root device
           - deviceName: /dev/xvda
             ebs:
