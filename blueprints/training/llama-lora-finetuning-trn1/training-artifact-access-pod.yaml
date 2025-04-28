@@ -12,7 +12,7 @@ spec:
       tty: true   # Allocate a TTY
       volumeMounts:
         - name: persistent-storage
-          mountPath: /fsx # Mount path for the FSx filesystem
+          mountPath: /shared # Mount path for the FSx filesystem
         - name: dshm # Also adding dshm as it's often useful
           mountPath: /dev/shm
   volumes:

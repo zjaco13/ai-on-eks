@@ -58,6 +58,8 @@ In the `terraform` sub-folder, set your preferred AWS region in the `blueprint.t
 
 **Note:** Trainium instances are only available in certain regions. You can check which regions support them [here](https://repost.aws/articles/ARmXIF-XS3RO27p0Pd1dVZXQ/what-regions-have-aws-inferentia-and-trainium-instances).
 
+Also enable AWS FSx for Lustre CSI driver and deployment of FSx-L volume by setting `enable_aws_fsx_csi_driver` and `deploy_fsx_volume` variables in the file to `true`. The rest of the resources can be set to `false`, since they aren't used in this fine-tuning example.
+
 Run the installation script to set up an EKS cluster with all required add-ons:
 
 ```bash
@@ -109,19 +111,13 @@ Create the ConfigMap for the training script:
 kubectl apply -f llama3-finetuning-script-configmap.yaml
 ```
 
-Update the `lora-finetune-job.yaml` file with your Docker image URL and tag.
-
-When the pod is running, you can monitor the fine-tuning job by checking the log file in the `/shared` folder on FSx for Lustre. The fine-tuned model will be saved in a folder named `llama3_tuned_model_<timestamp>`.
-
-At the end, the script tests the fine-tuned model with some example prompts. The results are saved in a log file named like `llama3_finetuning_<timestamp>.out` next to the model folder.
-
-You can use a utility pod to access the FSx-L filesystem and view the logs and model files. Create this pod before starting the training job:
+Once we launch the training script using the Kubernetes Job in `lora-finetune-job.yaml`, you can monitor the fine-tuning job by checking the log file in the `/shared` folder on FSx for Lustre. The fine-tuned model will be saved in a folder named `llama3_tuned_model_<timestamp>`. The script finally tests the fine-tuned model with some example prompts. The results are saved in a log file named like `llama3_finetuning_<timestamp>.out` next to the model folder. You can use a utility pod to access the FSx-L filesystem to view the fine-tuning logs and access the tuned model artifact. So, let's create this utility pod before starting the training job:
 
 ```bash
 kubectl apply -f training-artifact-access-pod.yaml
 ```
 
-Now you can launch the fine-tuning job:
+Update the `lora-finetune-job.yaml` file with your Docker image URL and tag. Now you can launch the fine-tuning job:
 
 ```bash
 kubectl apply -f lora-finetune-job.yaml
@@ -165,7 +161,7 @@ kubectl delete -f training-artifact-access-pod.yaml
 After making sure there are no other dependencies, delete the ECR repository and images:
 
 ```bash
-aws ecr batch-delete-image --repository-name llm-finetune/llama-finetuning-trn --image-ids imageTag=latest --region $(cat .eks_region)
+aws ecr batch-delete-image --repository-name llm-finetune/llama-finetuning-trn --image-ids imageTag=feature-lora --region $(cat .eks_region)
 # Then delete the empty repository:
 aws ecr delete-repository --repository-name llm-finetune/llama-finetuning-trn --region $(cat .eks_region)
 ```
