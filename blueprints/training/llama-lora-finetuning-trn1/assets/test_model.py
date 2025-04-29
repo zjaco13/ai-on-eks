@@ -1,6 +1,5 @@
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import subprocess
 import argparse
 
 # Set these as constants
@@ -60,9 +59,7 @@ def evaluate_models(dataset, tokenizer, base_model, tuned_model, indices):
         )
         prompt_len = tokenized["input_ids"].size(1)
 
-        # Clear screen and display
-        subprocess.run("clear", shell=True)
-        print(f"Evaluating sample {idx}")
+        print(f"\nEvaluating sample {idx}")
         print(f"PROMPT:\n{example}\n")
         print("Generating output for the prompt using the base model and the new fine-tuned model. Please wait...\n\n")
 
@@ -72,7 +69,7 @@ def evaluate_models(dataset, tokenizer, base_model, tuned_model, indices):
 
         # Display results
         print("BASE MODEL:\n", tokenizer.decode(base_output[0][prompt_len:]), "\n")
-        print("FINE-TUNED MODEL:\n", tokenizer.decode(tuned_output[0][prompt_len:]), "\n")
+        print("FINE-TUNED MODEL:\n", tokenizer.decode(tuned_output[0][prompt_len:]), "\n\n")
 
 if __name__ == "__main__":
     main()
