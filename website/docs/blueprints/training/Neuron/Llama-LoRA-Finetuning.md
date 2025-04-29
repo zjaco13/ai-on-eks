@@ -85,7 +85,7 @@ kubectl get nodes # Output shows the EKS Managed Node group nodes
 
 ## 2. Build the Docker Image
 
-Build the Docker image for Llama 3 fine-tuning. Run these commands from the root of the ai-on-eks repository:
+We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optimum-neuron/en/containers) from HuggingFace as the base for our Llama3 fine-tuning container. At the time of writing, this image includes Optimum Neuron version 0.0.25. Run the following commands from the root of the ai-on-eks repository:
 
 **Note:** Make sure your AWS user has access to the ECR repository in your chosen region. The script will create the repo and push the image for you.
 
@@ -131,7 +131,7 @@ Check the job status:
 kubectl get jobs
 ```
 
-**Note:** If the container doesn't get scheduled, check the Karpenter logs for errors. Sometimes, the subnet chosen during setup doesn't have enough trn1.32xlarge capacity. If needed, update the `trainium-trn1` EC2NodeClass subnet in `addons.tf` (in `infra/trainium-inferentia/terraform`), re-run `install.sh`, and try again.
+**Note:** If the container does not get scheduled, check the Karpenter logs for errors. This issue may occur if the availability zones (AZs) or subnets selected during infrastructure setup do not have an available trn1.32xlarge EC2 instance. To resolve this, you can specify different availability zones in the local.azs field within the main.tf file. Make sure to reference the appropriate subnets in the new AZs using the trainium-trn1 EC2NodeClass in the addons.tf file, located in the ai-on-eks/infra/base/terraform directory. After making these changes, re-run install.sh from the ai-on-eks/infra/trainium-inferentia directory to apply the updates through the Terraform script.
 
 To monitor the log for the fine-tuning job, access the tuned model, or check the generated text-to-SQL outputs from the test run with the fine-tuned model, open a shell in the utility pod and navigate to the `/shared`  folder where these can be found.
 
