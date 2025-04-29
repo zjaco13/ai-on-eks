@@ -131,7 +131,7 @@ Check the job status:
 kubectl get jobs
 ```
 
-**Note:** If the container does not get scheduled, check the Karpenter logs for errors. This issue may occur if the availability zones (AZs) or subnets selected during infrastructure setup do not have an available trn1.32xlarge EC2 instance. To resolve this, you can specify different availability zones in the local.azs field within the main.tf file. Make sure to reference the appropriate subnets in the new AZs using the trainium-trn1 EC2NodeClass in the addons.tf file, located in the ai-on-eks/infra/base/terraform directory. After making these changes, re-run install.sh from the ai-on-eks/infra/trainium-inferentia directory to apply the updates through the Terraform script.
+**Note:** If the container isn't scheduled, check Karpenter logs for errors. This might happen if the chosen availability zones (AZs) or subnets lack an available trn1.32xlarge EC2 instance. To fix this, update the local.azs field in the main.tf file, located at ai-on-eks/infra/base/terraform. Ensure the trainium-trn1 EC2NodeClass in the addons.tf file, also at ai-on-eks/infra/base/terraform, references the correct subnets for these AZs. Then, rerun install.sh from ai-on-eks/infra/trainium-inferentia to apply the changes via Terraform.
 
 To monitor the log for the fine-tuning job, access the tuned model, or check the generated text-to-SQL outputs from the test run with the fine-tuned model, open a shell in the utility pod and navigate to the `/shared`  folder where these can be found.
 
