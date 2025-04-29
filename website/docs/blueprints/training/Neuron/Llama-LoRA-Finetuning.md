@@ -111,13 +111,13 @@ Create the ConfigMap for the training script:
 kubectl apply -f llama3-finetuning-script-configmap.yaml
 ```
 
-Once we launch the training script using the Kubernetes Job in `lora-finetune-job.yaml`, you can monitor the fine-tuning job by checking the log file in the `/shared` folder on FSx for Lustre. The fine-tuned model will be saved in a folder named `llama3_tuned_model_<timestamp>`. The script finally tests the fine-tuned model with some example prompts. The results are saved in a log file named like `llama3_finetuning_<timestamp>.out` next to the model folder. You can use a utility pod to access the FSx-L filesystem to view the fine-tuning logs and access the tuned model artifact. So, let's create this utility pod before starting the training job:
+**Note:** After launching the training script with the Kubernetes Job in lora-finetune-job.yaml, monitor the fine-tuning job by checking the log file in the /shared folder on FSx for Lustre. The fine-tuned model will be saved in a folder named llama3_tuned_model_<timestamp>. The script tests the model with sample prompts, saving results in a log file named llama3_finetuning_<timestamp>.out alongside the model folder. To view the fine-tuning logs and access the tuned model, use a utility pod to access the FSx for Lustre filesystem. Create this utility pod before starting the training job.
 
 ```bash
 kubectl apply -f training-artifact-access-pod.yaml
 ```
 
-Update the `lora-finetune-job.yaml` file with your Docker image URL and tag. Now you can launch the fine-tuning job:
+Edit the lora-finetune-job.yaml file with your Docker image URL and tag. Launch the Kubernetes Job to run the script that fine-tunes the Llama3 model and tests the fine-tuned model with sample prompts:
 
 ```bash
 kubectl apply -f lora-finetune-job.yaml
