@@ -9,13 +9,10 @@ data:
     # Capture the model output directory name from the first argument
     MODEL_OUTPUT_DIR_ARG=$1
 
-    git clone https://github.com/ai-on-eks.git
-
-    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/finetune_llama.py .
-    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/consolidate_adapter_shards_and_merge_model.py .
-    cp ai-on-eks/blueprints/training/llama-lora-finetuning-trn1/assets/test_model.py .
-
-    rm -rf ./ai-on-eks
+    # Download the three required files directly from GitHub
+    curl -O https://raw.githubusercontent.com/ai-on-eks/main/blueprints/training/llama-lora-finetuning-trn1/assets/finetune_llama.py
+    curl -O https://raw.githubusercontent.com/ai-on-eks/main/blueprints/training/llama-lora-finetuning-trn1/assets/consolidate_adapter_shards_and_merge_model.py
+    curl -O https://raw.githubusercontent.com/ai-on-eks/main/blueprints/training/llama-lora-finetuning-trn1/assets/test_model.py
 
     export FINETUNED_SHARDED_MODEL_DIR="./finetuned_sharded_model"
     export FINETUNED_MERGED_MODEL_DIR="./finetuned_merged_model"
