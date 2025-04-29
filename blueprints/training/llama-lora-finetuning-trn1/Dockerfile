@@ -1,3 +1,4 @@
+# use current HuggingFace's Optimum Neuron training container as base image, which has optimum version 0.0.25
 FROM 763104351884.dkr.ecr.us-east-2.amazonaws.com/huggingface-pytorch-training-neuronx:2.1.2-transformers4.43.2-neuronx-py310-sdk2.20.0-ubuntu20.04
 
 
