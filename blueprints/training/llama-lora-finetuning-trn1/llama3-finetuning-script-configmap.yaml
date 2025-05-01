@@ -6,6 +6,10 @@ data:
   llama3_finetuning.sh: |-
     #!/bin/bash
 
+    # Patch trl library to workaround issue https://github.com/huggingface/optimum-neuron/issues/761
+    pip3 install -U pip
+    pip3 install trl==0.11.4
+
     # Generate timestamp and set the model output directory
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     MODEL_OUTPUT_DIR="/shared/llama3_tuned_model_${TIMESTAMP}"
