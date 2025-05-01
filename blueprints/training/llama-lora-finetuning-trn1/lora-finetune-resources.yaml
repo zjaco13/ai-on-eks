@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: huggingface-secret
+type: Opaque
+data:
+  HF_TOKEN: ${HUGGINGFACE_HUB_ACCESS_TOKEN}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -9,13 +17,9 @@ spec:
     spec:
       containers:
         - name: app
-          image: <image-url>
-          command: ['/bin/bash', '-c']
-          args:
-            - |-
-              TIMESTAMP=$(date +%Y%m%d-%H%M%S); \
-              MODEL_OUTPUT_DIR="/shared/llama3_tuned_model_$TIMESTAMP"; \
-              /scripts/llama3_finetuning.sh "$MODEL_OUTPUT_DIR" > /shared/llama3_finetuning_"$TIMESTAMP".out 2>&1
+          image: ${FINETUNING_CONTAINER_IMAGE_URL}
+          command: ["/bin/bash", "-c"]
+          args: ["/scripts/llama3_finetuning.sh > /shared/llama3_finetuning.out 2>&1"]
           env:
             - name: HUGGING_FACE_HUB_TOKEN
               valueFrom:

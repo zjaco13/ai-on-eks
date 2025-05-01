@@ -6,8 +6,9 @@ data:
   llama3_finetuning.sh: |-
     #!/bin/bash
 
-    # Capture the model output directory name from the first argument
-    MODEL_OUTPUT_DIR_ARG=$1
+    # Generate timestamp and set the model output directory
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    MODEL_OUTPUT_DIR="/shared/llama3_tuned_model_${TIMESTAMP}"
 
     # Download the three required files directly from GitHub
     curl -O https://raw.githubusercontent.com/ai-on-eks/main/blueprints/training/llama-lora-finetuning-trn1/assets/finetune_llama.py
@@ -41,5 +42,5 @@ data:
     python3 ./test_model.py --tuned-model $FINETUNED_MERGED_MODEL_DIR
     echo -e "\n\nTest run completed"
 
-    echo -e "\n\n saving fine-tuned model to output folder: $MODEL_OUTPUT_DIR_ARG"
-    mv $FINETUNED_MERGED_MODEL_DIR $MODEL_OUTPUT_DIR_ARG
+    echo -e "\n\n saving fine-tuned model to output folder: $MODEL_OUTPUT_DIR"
+    mv $FINETUNED_MERGED_MODEL_DIR $MODEL_OUTPUT_DIR
