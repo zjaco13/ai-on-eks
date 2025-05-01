@@ -85,7 +85,7 @@ kubectl get nodes # Output shows the EKS Managed Node group nodes
 
 ## 2. Build the Docker Image
 
-We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optimum-neuron/en/containers) from HuggingFace as the base for our Llama3 fine-tuning container. At the time of writing, this image includes Optimum Neuron version 0.0.25. Run the following commands from the root of the ai-on-eks repository:
+We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optimum-neuron/en/containers) from HuggingFace as the base image for our Llama3 fine-tuning container. At the time of writing, this image includes Optimum Neuron version 0.0.25. Run the following commands from the root of the ai-on-eks repository:
 
 **Note:** Make sure your AWS user has access to the ECR repository in your chosen region. The script will create the repo and push the image for you.
 
@@ -93,13 +93,13 @@ We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optim
 cd blueprints/training/llama-lora-finetuning-trn1
 ./build-container-image.sh
 ```
-When prompted, enter the same region you used earlier. After the script finishes, note the Docker image URL and tag for the next step.
+When prompted, enter the same region you used earlier.
 
 ## 3. Launch the Llama training job
 
 Before starting the fine-tuning job, set up a Kubernetes Secret, a ConfigMap for the training script, and update the container image URL in the job spec.
 
-To let the training script download the Llama 3 model from Hugging Face, you need your Hugging Face access token (find it under Settings → Access Tokens on the Hugging Face website). Create a Kubernetes Secret with this token:
+To let the training script download the Llama 3 model from Hugging Face, you need your Hugging Face access token. You can manage and retrieve your access token under [settings](https://huggingface.co/docs/hub/en/security-tokens) on the HuggingFace website. Create a Kubernetes Secret for this access token by replacing the placeholder text `<HF_TOKEN>` with it.
 
 ```bash
 kubectl create secret generic huggingface-secret --from-literal=HF_TOKEN=<HF_TOKEN>
@@ -117,7 +117,7 @@ kubectl apply -f llama3-finetuning-script-configmap.yaml
 kubectl apply -f training-artifact-access-pod.yaml
 ```
 
-Edit the lora-finetune-job.yaml file with your Docker image URL and tag. Launch the Kubernetes Job to run the script that fine-tunes the Llama3 model and tests the fine-tuned model with sample prompts:
+Modify the lora-finetune-job.yaml file to enter the image URL for the container image. Replace the placeholder `<image-url>` text with the Docker image URL that's saved in the local file named `.ecr_repo_uri`. After saving the yaml file, launch the Kubernetes Job to run the script that fine-tunes the Llama3 model and tests the fine-tuned model using sample prompts:
 
 ```bash
 kubectl apply -f lora-finetune-job.yaml
@@ -162,8 +162,10 @@ After making sure there are no other dependencies, delete the ECR repository and
 
 ```bash
 aws ecr batch-delete-image --repository-name llm-finetune/llama-finetuning-trn --image-ids imageTag=feature-lora --region $(cat .eks_region)
-# Then delete the empty repository:
+# then delete the empty repository:
 aws ecr delete-repository --repository-name llm-finetune/llama-finetuning-trn --region $(cat .eks_region)
+# remove files created by the image builder script
+rm .eks_region .ecr_repo_uri
 ```
 
 Clean up the EKS cluster and related resources:
