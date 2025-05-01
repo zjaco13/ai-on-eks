@@ -2,10 +2,12 @@
 
 TERRAFORM_COMMAND="terraform destroy -auto-approve"
 CLUSTERNAME="ai-stack"
+REGION="region"
 # Check if blueprint.tfvars exists
 if [ -f "blueprint.tfvars" ]; then
   TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=blueprint.tfvars"
   CLUSTERNAME="$(echo "var.name" | terraform console -var-file=blueprint.tfvars | tr -d '"')"
+  REGION="$(echo "var.region" | terraform console -var-file=blueprint.tfvars | tr -d '"')"
 fi
 echo "Destroying Terraform $CLUSTERNAME"
 echo "Destroying RayService..."
@@ -48,8 +50,9 @@ for arn in $(aws resourcegroupstaggingapi get-resources \
   --resource-type-filters elasticloadbalancing:loadbalancer \
   --tag-filters "Key=elbv2.k8s.aws/cluster,Values=$CLUSTERNAME" \
   --query 'ResourceTagMappingList[].ResourceARN' \
+  --region $REGION \
   --output text); do \
-    aws elbv2 delete-load-balancer --load-balancer-arn "$arn"; \
+    aws elbv2 delete-load-balancer --region $REGION --load-balancer-arn "$arn"; \
   done
 
 echo "Destroying Target Groups..."
@@ -57,15 +60,17 @@ for arn in $(aws resourcegroupstaggingapi get-resources \
   --resource-type-filters elasticloadbalancing:targetgroup \
   --tag-filters "Key=elbv2.k8s.aws/cluster,Values=$CLUSTERNAME" \
   --query 'ResourceTagMappingList[].ResourceARN' \
+  --region $REGION \
   --output text); do \
-    aws elbv2 delete-target-group --target-group-arn "$arn"; \
+    aws elbv2 delete-target-group --region $REGION --target-group-arn "$arn"; \
   done
 
 echo "Destroying Security Groups..."
 for sg in $(aws ec2 describe-security-groups \
   --filters "Name=tag:elbv2.k8s.aws/cluster,Values=$CLUSTERNAME" \
+  --region $REGION \
   --query 'SecurityGroups[].GroupId' --output text); do \
-    aws ec2 delete-security-group --group-id "$sg"; \
+    aws ec2 delete-security-group --region $REGION --group-id "$sg"; \
   done
 
 # List of Terraform modules to destroy in sequence
@@ -88,7 +93,7 @@ done
 
 ## Final destroy to catch any remaining resources
 echo "Destroying remaining resources..."
-destroy_output=$($TERRAFORM_COMMAND -var="region=$region" 2>&1 | tee /dev/tty)
+destroy_output=$($TERRAFORM_COMMAND -var="region=$REGION" 2>&1 | tee /dev/tty)
 if [[ ${PIPESTATUS[0]} -eq 0 && $destroy_output == *"Destroy complete"* ]]; then
   echo "SUCCESS: Terraform destroy of all modules completed successfully"
 else
