@@ -126,7 +126,7 @@ Initialize the fine-tuning container image url env variable.
 export FINETUNING_CONTAINER_IMAGE_URL=$(cat .ecr_image_uri)
 ```
 
-Deploy the Secret and the fine-tuning Job after substituting the environment variables for the HuggingFace Hub access token and the container image URL.
+Deploy the Secret and fine-tuning Job resources by running the following command, which automatically substitutes HUGGINGFACE_HUB_ACCESS_TOKEN and FINETUNING_CONTAINER_IMAGE_URL environment variables in the yaml before applying the resources to your Kubernetes cluster.
 
 ```bash
 envsubst < lora-finetune-resources.yaml | kubectl apply -f -
