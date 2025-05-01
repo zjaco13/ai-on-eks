@@ -90,7 +90,7 @@ We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optim
 
 **Note:** Make sure the AWS user you are using has access to the ECR repository in your chosen region.
 
-Run the script to create the ECR repo and push the fine-tuning container image to it. The URL of the image will be saved locally in the file `.ecr_repo_uri`.
+Run the script to create the ECR repo and push the fine-tuning container image to it. The URL of the image will be saved locally in the file `.ecr_image_url`.
 
 ```bash
 cd blueprints/training/llama-lora-finetuning-trn1
@@ -123,7 +123,7 @@ export HUGGINGFACE_HUB_ACCESS_TOKEN=$(echo -n "your_huggingface_hub_access_token
 Initialize the fine-tuning container image url env variable.
 
 ```bash
-export FINETUNING_CONTAINER_IMAGE_URL=$(cat .ecr_repo_uri)
+export FINETUNING_CONTAINER_IMAGE_URL=$(cat .ecr_image_uri)
 ```
 
 Deploy the Secret and the fine-tuning Job after substituting the environment variables for the HuggingFace Hub access token and the container image URL.
