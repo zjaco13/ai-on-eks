@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/llm-finetune/llama-finetuning-trn:feature-lora
+          image: <image-url>
           command: ['/bin/bash', '-c']
           args:
             - |-
