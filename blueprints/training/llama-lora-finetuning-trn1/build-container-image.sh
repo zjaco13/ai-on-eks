@@ -67,7 +67,7 @@ else
 fi
 
 # Store ECR REPO URI for later use
-echo $ECR_REPO_URI:$ECR_IMAGE_TAG > .ecr_image_url
+echo $ECR_REPO_URI:$ECR_IMAGE_TAG > .ecr_image_uri
 
 # Login to ECR
 echo -e "\nLogging in to ECR"
