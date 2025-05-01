@@ -90,7 +90,7 @@ We'll use the [Optimum Neuron container image](https://huggingface.co/docs/optim
 
 **Note:** Make sure the AWS user you are using has access to the ECR repository in your chosen region.
 
-Run the script to create the ECR repo and push the fine-tuning container image to it. The URL of the image will be saved locally in the file `.ecr_image_url`.
+Run the script to create the ECR repo and push the fine-tuning container image to it. The URL of the image will be saved locally in the file `.ecr_image_uri`.
 
 ```bash
 cd blueprints/training/llama-lora-finetuning-trn1
@@ -129,7 +129,7 @@ export FINETUNING_CONTAINER_IMAGE_URL=$(cat .ecr_image_uri)
 Deploy the Secret and the fine-tuning Job after substituting the environment variables for the HuggingFace Hub access token and the container image URL.
 
 ```bash
-envsubst < lora-finetune-job.yaml | kubectl apply -f -
+envsubst < lora-finetune-resources.yaml | kubectl apply -f -
 ```
 
 ## 4. Verify fine-tuning
@@ -161,7 +161,7 @@ To remove the resources created by this solution, run these commands from the ro
 ```bash
 # Delete the Kubernetes resources:
 cd blueprints/training/llama-lora-finetuning-trn1
-envsubst < lora-finetune-job.yaml | kubectl delete -f -
+envsubst < lora-finetune-resources.yaml | kubectl delete -f -
 kubectl delete -f llama3-finetuning-script-configmap.yaml
 kubectl delete -f training-artifact-access-pod.yaml
 ```
@@ -173,7 +173,7 @@ aws ecr batch-delete-image --repository-name llm-finetune/llama-finetuning-trn -
 # then delete the empty repository:
 aws ecr delete-repository --repository-name llm-finetune/llama-finetuning-trn --region $(cat .eks_region)
 # remove files created by the image builder script
-rm .eks_region .ecr_repo_uri
+rm .eks_region .ecr_image_uri
 ```
 
 Clean up the EKS cluster and related resources:
