@@ -26,59 +26,7 @@ AIBrix is an open-source initiative designed to provide essential building block
 Before deploying this blueprint, it is important to be cognizant of the costs associated with the utilization of GPU Instances.
 :::
 
-This example deploys the following resources
-
-- Creates a new sample VPC, 2 Private Subnets and 2 Public Subnets
-- Creates Internet gateway for Public Subnets and NAT Gateway for Private Subnets
-- Creates EKS Cluster Control plane with public endpoint (for demo reasons only) with core managed node group.
-- Karpenter deployed as cluster scaler with following nodepools
-    - g5-gpu-karpenter (for  nvidia gpus)
-    - inferentia-inf2 (for  inferentia accelerators)
-    - trainium-trn1 (for  trainium accelerators)
-    - x86-cpu-karpenter (for  x86 cpus)
-
-
-### Prerequisites
-
-Ensure that you have installed the following tools on your machine.
-
-1. [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-2. [kubectl](https://Kubernetes.io/docs/tasks/tools/)
-3. [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
-
-### Deploy
-
-Clone the repository
-
-```bash
-git clone https://github.com/awslabs/ai-on-eks.git
-```
-
-Navigate into one of the aibrix blueprint directories and run `install.sh` script
-
-```bash
-cd ai-on-eks/infra/aibrix && chmod +x install.sh
-./install.sh
-cd ../..
-```
-
-### Verify the resources
-
-Verify the Amazon EKS Cluster created
-
-```bash
-aws eks --region us-east-1 describe-cluster --name aibrix-on-eks
-```
-
-```bash
-aws eks --region us-east-1 update-kubeconfig --name aibrix-stack
-```
-
-Lets see the nodes available in the EKS cluster (Note: the below nodes are provisioned by the managed node group)
-```bash
-kubectl get nodes 
-
-```
+Please refer to [AI](https://awslabs.github.io/ai-on-eks/docs/infra/ai-ml/aibrix) page for deploying AIBrix models on EKS.
 
 </CollapsibleContent>
 
@@ -86,7 +34,6 @@ kubectl get nodes
 ### Checking AIBrix Installation
 
 Please run the below commands to check the AIBrix installation
-
 
 ``` bash
 kubectl get pods -n aibrix-system
