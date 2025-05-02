@@ -69,24 +69,23 @@ Run the installation script to set up an EKS cluster with all required add-ons:
 
 ### Verify the resources
 
-We'll be utilizing the AWS region to run and initialize data in the upcoming steps. Let's start by setting an environment variable to the same region value you selected in previous step, by replacing the placeholder `<aws-region>` text below.
+Verify the EKS cluster is running by using the region selected earlier:
 
 ```bash
-export AWS_REGION=<aws-region>
+aws eks --region <aws-region> describe-cluster --name trainium-inferentia
 ```
 
-Check that your EKS cluster is running in the region you set earlier:
+Update the Kubernetes config file to authenticate with EKS using the same region:
 
 ```bash
-aws eks --region $AWS_REGION describe-cluster --name trainium-inferentia
+aws eks --region <aws-region> update-kubeconfig --name trainium-inferentia
+
+# check the EKS Managed Node group nodes
+kubectl get nodes 
 ```
 
-```bash
-# Creates k8s config file to authenticate with EKS
-aws eks --region $AWS_REGION update-kubeconfig --name trainium-inferentia
+**Note:** Replace <aws-region> with the AWS region you chose previously.
 
-kubectl get nodes # Output shows the EKS Managed Node group nodes
-```
 
 </CollapsibleContent>
 
@@ -112,7 +111,9 @@ We'll set your HuggingFace Hub token as an environment variable. Replace `your_h
 export HUGGINGFACE_HUB_ACCESS_TOKEN=$(echo -n "your_huggingface_hub_access_token" | base64)
 ```
 
-Deploy the Secret and fine-tuning Job resources by running the following command, which automatically substitutes HUGGINGFACE_HUB_ACCESS_TOKEN and AWS_REGION environment variables in the yaml before applying the resources to your Kubernetes cluster.
+Deploy the Secret and fine-tuning Job resources by running the following command, which automatically substitutes HUGGINGFACE_HUB_ACCESS_TOKEN environment variable in the yaml before applying the resources to your Kubernetes cluster.
+
+**Note:** The fine-tuning container image is fetched from the `us-west-2` ECR repository. Check the [HuggingFace website](https://huggingface.co/docs/optimum-neuron/en/containers) to check for another supported region that you prefer based on your deployment region. If you plan to use a different one, make sure to update the AWS account ID along with the AWS region in the container image URL value specified in the lora-finetune-resources.yaml file.
 
 ```bash
 envsubst < lora-finetune-resources.yaml | kubectl apply -f -
@@ -128,7 +129,7 @@ kubectl get jobs
 
 **Note:** If the container isn't scheduled, check Karpenter logs for errors. This might happen if the chosen availability zones (AZs) or subnets lack an available trn1.32xlarge EC2 instance. To fix this, update the local.azs field in the main.tf file, located at ai-on-eks/infra/base/terraform. Ensure the trainium-trn1 EC2NodeClass in the addons.tf file, also at ai-on-eks/infra/base/terraform, references the correct subnets for these AZs. Then, rerun install.sh from ai-on-eks/infra/trainium-inferentia to apply the changes via Terraform.
 
-To monitor the log for the fine-tuning job, access the tuned model, or check the generated text-to-SQL outputs from the test run with the fine-tuned model, open a shell in the utility pod and navigate to the `/shared` folder where these can be found. The fine-tuned model will be saved in a folder named llama3_tuned_model_<timestamp> and the generated SQL queries from sample prompts can be found in a log file named llama3_finetuning_<timestamp>.out alongside the model folder.
+To monitor the log for the fine-tuning job, access the tuned model, or check the generated text-to-SQL outputs from the test run with the fine-tuned model, open a shell in the utility pod and navigate to the `/shared` folder where these can be found. The fine-tuned model will be saved in a folder named `llama3_tuned_model_<timestamp>` and the generated SQL queries from sample prompts can be found in a log file named `llama3_finetuning.out` alongside the model folder.
 
 ```bash
 kubectl exec -it training-artifact-access-pod -- /bin/bash
