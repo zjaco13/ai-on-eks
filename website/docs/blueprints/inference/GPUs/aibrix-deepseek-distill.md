@@ -45,7 +45,7 @@ Wait till all the pods are in Running status.
 
 We will now run Deepseek-Distill-llama-8b model using AIBrix on EKS.
 
-Please run the below command. 
+Please run the below command.
 
 ```bash
 kubectl apply -f blueprints/inference/aibrix/deepseek-distill.yaml
@@ -85,6 +85,12 @@ curl -v http://${ENDPOINT}/v1/completions \
 <CollapsibleContent header={<h2><span>Cleanup</span></h2>}>
 
 This script will cleanup the environment using `-target` option to ensure all the resources are deleted in correct order.
+
+```bash
+kubectl delete -f blueprints/inference/aibrix/deepseek-distill.yaml
+```
+
+To cleanup the AIBrix deployment, and delete the EKs cluster please run the below command
 
 ```bash
 cd infra/aibrix/terraform  && chmod +x cleanup.sh

@@ -64,7 +64,7 @@ Each stack inherits the `base` stack's components. These components include:
 | `enable_torchx_etcd`                     | Enable etcd for torchx                             | `false`                 |
 | `enable_mpi_operator`                    | Enable the MPIO perator                            | `false`                 |
 | `enable_aibrix_stack`                    | Enable the AIBrix stack                            | `false`                 |
-| `aibrix_stack_version`                   | AIBrix Stack version                               | `v0.2.1`                | 
+| `aibrix_stack_version`                   | AIBrix Stack version                               | `v0.2.1`                |
 ### JupyterHub
 
 | Variable Name                 | Description                                                                           | Default |
