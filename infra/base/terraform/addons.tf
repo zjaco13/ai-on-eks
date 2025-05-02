@@ -762,7 +762,7 @@ resource "kubectl_manifest" "mpi_operator" {
 # AiBrix on EKS
 #---------------------------------------------------------------
 data "http" "aibrix_depenency" {
-  url = "https://github.com/vllm-project/aibrix/releases/download/${var.aibrix_stack_version}/aibrix-dependency-${var.aibrix_stack_version}.yaml"
+  url   = "https://github.com/vllm-project/aibrix/releases/download/${var.aibrix_stack_version}/aibrix-dependency-${var.aibrix_stack_version}.yaml"
   count = var.enable_aibrix_stack ? 1 : 0
   # Optional request headers
   request_headers = {
@@ -771,7 +771,7 @@ data "http" "aibrix_depenency" {
 }
 
 data "http" "aibrix_core" {
-  url = "https://github.com/vllm-project/aibrix/releases/download/${var.aibrix_stack_version}/aibrix-core-${var.aibrix_stack_version}.yaml"
+  url   = "https://github.com/vllm-project/aibrix/releases/download/${var.aibrix_stack_version}/aibrix-core-${var.aibrix_stack_version}.yaml"
   count = var.enable_aibrix_stack ? 1 : 0
   # Optional request headers
   request_headers = {
@@ -779,15 +779,6 @@ data "http" "aibrix_core" {
   }
 }
 
-data "kubernetes_service" "aibrix_service" {
-  count = var.enable_aibrix_stack ? 1 : 0
-  metadata {
-    name      = "envoy-aibrix-system-aibrix-eg-903790dc"
-    namespace = kubernetes_namespace.aibrix_dependency[0].metadata[0].name
-  }
-
-  depends_on = [kubectl_manifest.aibrix_dependency, kubectl_manifest.aibrix_core]
-}
 
 resource "kubernetes_namespace" "aibrix_dependency" {
   count = var.enable_aibrix_stack ? 1 : 0
@@ -801,28 +792,28 @@ resource "kubernetes_namespace" "aibrix_dependency" {
 }
 
 resource "kubectl_manifest" "aibrix_dependency" {
-  for_each = var.enable_aibrix_stack ? { for index, resource in provider::kubernetes::manifest_decode_multi(data.http.aibrix_depenency[0].response_body) : "${resource.kind}/${resource.metadata.name}" => yamlencode(resource) } : {}
+  for_each  = var.enable_aibrix_stack ? { for index, resource in provider::kubernetes::manifest_decode_multi(data.http.aibrix_depenency[0].response_body) : "${resource.kind}/${resource.metadata.name}" => yamlencode(resource) } : {}
   yaml_body = each.value
   # Server side apply to prevent errors installing CRDs
   server_side_apply = true
-  depends_on = [kubernetes_namespace.aibrix_dependency]
+  depends_on        = [kubernetes_namespace.aibrix_dependency]
 }
 
 # NOTE: this is a hack to prevent resources not being applied because the namespace cannot be found
 resource "kubernetes_namespace" "aibrix_core" {
   count = var.enable_aibrix_stack ? 1 : 0
   metadata {
-  name = "aibrix-system"
+    name = "aibrix-system"
   }
   lifecycle {
-  ignore_changes = [metadata[0].labels]
+    ignore_changes = [metadata[0].labels]
   }
 }
 
 resource "kubectl_manifest" "aibrix_core" {
-  for_each = var.enable_aibrix_stack ? { for index, resource in provider::kubernetes::manifest_decode_multi(data.http.aibrix_core[0].response_body) : "${resource.kind}/${resource.metadata.name}" => yamlencode(resource) }: {}
+  for_each  = var.enable_aibrix_stack ? { for index, resource in provider::kubernetes::manifest_decode_multi(data.http.aibrix_core[0].response_body) : "${resource.kind}/${resource.metadata.name}" => yamlencode(resource) } : {}
   yaml_body = each.value
   # Server side apply to prevent errors installing CRDs
   server_side_apply = true
-  depends_on = [kubernetes_namespace.aibrix_core, kubectl_manifest.aibrix_dependency]
+  depends_on        = [kubernetes_namespace.aibrix_core, kubectl_manifest.aibrix_dependency]
 }

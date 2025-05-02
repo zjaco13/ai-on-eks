@@ -152,6 +152,7 @@ This script will cleanup the environment using `-target` option to ensure all th
 
 ```bash
 cd ai-on-eks/infra/aibrix/terraform && chmod +x cleanup.sh
+./cleanup.sh
 ```
 
 </CollapsibleContent>
