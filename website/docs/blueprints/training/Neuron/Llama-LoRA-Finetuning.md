@@ -81,10 +81,10 @@ Update the Kubernetes config file to authenticate with EKS using the same region
 aws eks --region <aws-region> update-kubeconfig --name trainium-inferentia
 
 # check the EKS Managed Node group nodes
-kubectl get nodes 
+kubectl get nodes
 ```
 
-**Note:** Replace <aws-region> with the AWS region you chose previously.
+**Note:** Replace `<aws-region>` with the AWS region you chose previously.
 
 
 </CollapsibleContent>
