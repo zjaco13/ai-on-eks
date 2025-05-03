@@ -119,7 +119,7 @@ Deploy the Secret and fine-tuning Job resources by running the following command
 envsubst < lora-finetune-resources.yaml | kubectl apply -f -
 ```
 
-## 3. Verify fine-tuning
+## 3. Verify fine-tuned Llama3 model
 
 Check the job status:
 
