@@ -72,19 +72,19 @@ Run the installation script to set up an EKS cluster with all required add-ons:
 Verify the EKS cluster is running by using the region selected earlier:
 
 ```bash
-aws eks --region <aws-region> describe-cluster --name trainium-inferentia
+aws eks --region AWS_REGION describe-cluster --name trainium-inferentia
 ```
 
 Update the Kubernetes config file to authenticate with EKS using the same region:
 
 ```bash
-aws eks --region <aws-region> update-kubeconfig --name trainium-inferentia
+aws eks --region AWS_REGION update-kubeconfig --name trainium-inferentia
 
 # check the EKS Managed Node group nodes
 kubectl get nodes
 ```
 
-**Note:** Replace `<aws-region>` with the AWS region you chose previously.
+**Note:** Replace AWS_REGION with the AWS region you chose previously.
 
 
 </CollapsibleContent>
