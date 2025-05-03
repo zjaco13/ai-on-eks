@@ -4,7 +4,7 @@ sidebar_label: Llama 3 Fine-tuning with LoRA
 import CollapsibleContent from '../../../../src/components/CollapsibleContent';
 
 :::warning
-To deploy ML models on EKS, you need access to GPUs or Neuron instances. If deployment fails, check if you have access to these resources. If nodes aren't starting, check Karpenter or Node group logs.
+To deploy this example for fine-tuning a LLM on EKS, you need access to AWS Trainium ec2 instance. If deployment fails, check if you have access to this instance type. If nodes aren't starting, check Karpenter or Node group logs.
 :::
 
 :::danger
@@ -23,9 +23,9 @@ This guide shows you how to fine-tune the `Llama3-8B` language model using AWS T
 
 Llama 3 is a large language model (LLM) for tasks like text generation, summarization, translation, and question answering. You can fine-tune it for your specific needs.
 
-#### AWS Trainium:
-- **Optimized for Deep Learning**: AWS Trainium Trn1 instances are built for deep learning. They offer high throughput and low latency, making them great for training large models like Llama 3.
-- **Neuron SDK**: The AWS Neuron SDK helps optimize your models for Trainium. It includes advanced compiler optimizations and supports mixed precision training for faster results without losing accuracy.
+### AWS Trainium
+
+AWS Trainium (Trn1) instances are designed for high-throughput, low-latency deep learning, ideal for training large models like Llama 3. The AWS Neuron SDK enhances Trainium's performance by optimizing models with advanced compiler techniques and mixed precision training for faster, accurate results.
 
 ## 1. Deploying the Solution
 
@@ -119,7 +119,7 @@ Deploy the Secret and fine-tuning Job resources by running the following command
 envsubst < lora-finetune-resources.yaml | kubectl apply -f -
 ```
 
-## 4. Verify fine-tuning
+## 3. Verify fine-tuning
 
 Check the job status:
 
@@ -139,7 +139,7 @@ cd /shared
 ls -l llama3_tuned_model* llama3_finetuning*
 ```
 
-### Cleaning up
+## 4. Cleaning up
 
 **Note:** Always run the cleanup steps to avoid extra AWS costs.
 
