@@ -33,13 +33,13 @@ The first variable deploys ArgoCD, which is used to deploy the observability arc
 The architecture is entirely deployed into the `monitoring` namespace. To access Grafana: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80`. You can then open https://localhost:3000 to log into grafana with username `admin` and password `prom-operator`. You can refer to the [security](https://github.com/awslabs/ai-ml-observability-reference-architecture?tab=readme-ov-file#security) section in the Readme to see how to change the username/password
 
 ### Training
-Ray training job logs and metrics will be automatically collected by the Observability architecture and can be found in the [training dashboard] (http://localhost:3000/d/ee6mbjghme96oc/gpu-training?orgId=1&refresh=5s&var-namespace=default&var-job=ray-train&var-instance=All).
+Ray training job logs and metrics will be automatically collected by the Observability architecture and can be found in the [training dashboard](http://localhost:3000/d/ee6mbjghme96oc/gpu-training?orgId=1&refresh=5s&var-namespace=default&var-job=ray-train&var-instance=All).
 
 #### Example
 A full example of this can be found in the [AI/ML observability repo](https://github.com/awslabs/ai-ml-observability-reference-architecture/tree/main/examples/training). We will also be updating the Blueprints here to make use of this architecture.
 
 ### Inference
-Ray inference metrics should be automatically picked up by the observability infrastructure and can be found in the [inference dashboard] (http://localhost:3000/d/bec31e71-3ac5-4133-b2e3-b9f75c8ab56c/inference-dashboard?orgId=1&refresh=5s). To instrument your inference workloads for logging, you will need to add a few items:
+Ray inference metrics should be automatically picked up by the observability infrastructure and can be found in the [inference dashboard](http://localhost:3000/d/bec31e71-3ac5-4133-b2e3-b9f75c8ab56c/inference-dashboard?orgId=1&refresh=5s). To instrument your inference workloads for logging, you will need to add a few items:
 
 #### FluentBit Config
 ```yaml
