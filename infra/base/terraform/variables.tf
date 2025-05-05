@@ -89,6 +89,11 @@ variable "enable_kubecost" {
   type        = bool
   default     = false
 }
+variable "enable_ai_ml_observability_stack" {
+  description = "Enable AI/ML observability addon"
+  type        = bool
+  default     = false
+}
 variable "enable_argo_workflows" {
   description = "Enable Argo Workflows addon"
   type        = bool
