@@ -97,7 +97,7 @@ cd infra/aibrix/terraform  && chmod +x cleanup.sh
 ./cleanup.sh
 ```
 
-</CollapsibleContent>
+<CollapsibleContent>
 
 :::caution
 To avoid unwanted charges to your AWS account, delete all the AWS resources created during this deployment
