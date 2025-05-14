@@ -5,5 +5,6 @@ enable_aws_cloudwatch_metrics = true
 enable_kuberay_operator       = true
 enable_volcano                = true
 enable_torchx_etcd            = true
-enable_aws_fsx_csi_driver     = true
 enable_mpi_operator           = true
+enable_aws_fsx_csi_driver     = true
+deploy_fsx_volume             = true
