@@ -3,13 +3,14 @@
 #-------------------------------------------------------------------
 # pre-requisites
 #-------------------------------------------------------------------
-# Step1: Deploy this blueprint https://awslabs.github.io/data-on-eks/docs/blueprints/infra/trainium
-# Step2: Deploy Neuron Scheduler https://awsdocs-neuron.readthedocs-hosted.com/en/latest/containers/tutorials/k8s-neuron-scheduler.html
+# Deploy this blueprint https://awslabs.github.io/ai-on-eks/docs/blueprints/inference/Neuron/vllm-ray-inf2
 #-------------------------------------------------------------------
-# Step1: cd gen-ai/inference/vllm-rayserve-inf2
-# Step2 (Optional): Build a Docker image and push it to ECR and use the image in the yaml
+# Step1: git clone https://github.com/awslabs/ai-on-eks.git
+# Step2: Deploy the Blueprint
+#   cd ai-on-eks/infra/trainium-inferentia/ && ./install.sh
 # Step3: Deploy Ray Cluster with Meta-Llama-3-8B-Instruct Model on Inf2 instances
-#   kubectl apply -f vllm-rayserve-deployment.yaml
+#   cd ai-on-eks/blueprints/inference/vllm-rayserve-inf2
+#   kubectl apply -f vllm-rayserve-deployment-70B.yaml
 # Step4: Deploy OpenWebUI Client
 #   kubectl apply -f openai-webui-deployment.yaml
 #   kubectl port-forward service/openai-webui 7860:7860 -n openai-webui
@@ -270,7 +271,7 @@ spec:
         resources: '"{\"neuron_cores\": 24}"'
       template:
         spec:
-          # schedulerName: my-scheduler # Correct placement
+          schedulerName: my-scheduler # Correct placement
           containers:
           - name: worker
             image: public.ecr.aws/data-on-eks/vllm-ray2.32.0-inf2-llama3:latest
@@ -324,12 +325,8 @@ spec:
               name: vllm-serve-script
           nodeSelector:
             instanceType: inferentia-inf2
-            # provisionerType: Karpenter
+            provisionerType: Karpenter
           tolerations:
           - key: "aws.amazon.com/neuron"
             operator: "Exists"
             effect: "NoSchedule"
-          #- key: "hub.jupyter.org/dedicated"
-          #  operator: "Equal"
-          #  value: "user"
-          #  effect: "NoSchedule"
