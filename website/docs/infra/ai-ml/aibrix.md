@@ -4,7 +4,7 @@ sidebar_position: 1
 ---
 import CollapsibleContent from '../../../src/components/CollapsibleContent';
 
-# AIBRIX on EKS
+# AIBrix on EKS
 
 :::warning
 Deployment of ML models on EKS requires access to GPUs or Neuron instances. If your deployment isn't working, it’s often due to missing access to these resources. Also, some deployment patterns rely on Karpenter autoscaling and static node groups; if nodes aren't initializing, check the logs for Karpenter or Node groups to resolve the issue.
@@ -15,7 +15,7 @@ These instructions only deploy the AIBrix cluster as a base. If you are looking 
 :::
 
 ### What is AIBrix?
-AIBrix is an open-source initiative designed to provide essential building blocks to construct scalable GenAI inference infrastructure. AIBrix delivers a cloud-native solution optimized for deploying, managing, and scaling large language model (LLM) inference, tailored specifically to enterprise needs.
+AIBrix is an open source initiative designed to provide essential building blocks to construct scalable GenAI inference infrastructure. AIBrix delivers a cloud-native solution optimized for deploying, managing, and scaling large language model (LLM) inference, tailored specifically to enterprise needs.
 ![Alt text](https://aibrix.readthedocs.io/latest/_images/aibrix-architecture-v1.jpeg)
 
 ### Key Features and Benefits
@@ -63,7 +63,7 @@ For example, set your `export AWS_DEFAULT_REGION="<REGION>"` to the desired regi
 
 
 ```bash
-cd ai-on-eks/infra/aibrix && chmod +x install.sh
+cd ai-on-eks/infra/aibrix
 ./install.sh
 cd ../..
 ```
@@ -75,14 +75,14 @@ cd ../..
 Update local kubeconfig so we can access kubernetes cluster
 
 :::info
-if you havent set your AWS_REGION, use --region us-east-1 with the below command
+if you haven't set your AWS_REGION, use --region us-east-1 with the below command
 :::
 
 ```bash
 aws eks  update-kubeconfig --name aibrix-on-eks
 ```
 
-First, lets verify that we have worker nodes running in the cluster.
+First, let's verify that we have worker nodes running in the cluster.
 
 ```bash
 kubectl get nodes
@@ -151,7 +151,7 @@ To avoid unwanted charges to your AWS account, delete all the AWS resources crea
 This script will cleanup the environment using `-target` option to ensure all the resources are deleted in correct order.
 
 ```bash
-cd ai-on-eks/infra/aibrix/terraform && chmod +x cleanup.sh
+cd ai-on-eks/infra/aibrix/terraform
 ./cleanup.sh
 ```
 

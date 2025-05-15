@@ -6,7 +6,7 @@ import CollapsibleContent from '../../../../src/components/CollapsibleContent';
 
 # AIBrix
 
-AIBrix is an open-source initiative designed to provide essential building blocks to construct scalable GenAI inference infrastructure. AIBrix delivers a cloud-native solution optimized for deploying, managing, and scaling large language model (LLM) inference, tailored specifically to enterprise needs.
+AIBrix is an open source initiative designed to provide essential building blocks to construct scalable GenAI inference infrastructure. AIBrix delivers a cloud-native solution optimized for deploying, managing, and scaling large language model (LLM) inference, tailored specifically to enterprise needs.
 ![Alt text](https://aibrix.readthedocs.io/latest/_images/aibrix-architecture-v1.jpeg)
 
 ### Features
@@ -59,7 +59,7 @@ Wait for the pod to be in running state.
 
 #### Accessing the model using gateway
 
-Gateway is designed to serve LLM requests and provides features such as dynamic model & lora adapter discovery, user configuration for request count & token usage budgeting, streaming and advanced routing strategies such as prefix-cache aware, heterogeneous GPU hardware.
+Gateway is designed to serve LLM requests and provides features such as dynamic model & LoRA adapter discovery, user configuration for request count & token usage budgeting, streaming and advanced routing strategies such as prefix-cache aware, heterogeneous GPU hardware.
 To access the model using Gateway, Please run the below command
 
 ```bash
@@ -92,7 +92,7 @@ kubectl delete -f blueprints/inference/aibrix/deepseek-distill.yaml
 To cleanup the AIBrix deployment, and delete the EKs cluster please run the below command
 
 ```bash
-cd infra/aibrix/terraform  && chmod +x cleanup.sh
+cd infra/aibrix/terraform
 ./cleanup.sh
 ```
 

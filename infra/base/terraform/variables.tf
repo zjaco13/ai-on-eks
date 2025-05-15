@@ -214,16 +214,16 @@ variable "oauth_username_key" {
   default     = ""
 }
 
-# Flag to enable aibrix stack
+# Flag to enable AIBrix stack
 variable "enable_aibrix_stack" {
-  description = "Enable AI Brix addon"
+  description = "Enable AIBrix addon"
   type        = bool
   default     = false
 }
 
-# Aibrix version
+# AiBrix version
 variable "aibrix_stack_version" {
-  description = "Enable AI Brix addon"
+  description = "AIBrix default version"
   type        = string
   default     = "v0.2.1"
 }
