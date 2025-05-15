@@ -1,25 +1,18 @@
 #-------------------------------------------------------------------
 # Deployment instructions
 #-------------------------------------------------------------------
-# pre-requisites
-#-------------------------------------------------------------------
-# Deploy this blueprint https://awslabs.github.io/ai-on-eks/docs/blueprints/inference/Neuron/vllm-ray-inf2
-#-------------------------------------------------------------------
-# Step1: git clone https://github.com/awslabs/ai-on-eks.git
-# Step2: Deploy the Blueprint
-#   cd ai-on-eks/infra/trainium-inferentia/ && ./install.sh
-# Step3: Deploy Ray Cluster with Meta-Llama-3-8B-Instruct Model on Inf2 instances
-#   cd ai-on-eks/blueprints/inference/vllm-rayserve-inf2
-#   kubectl apply -f vllm-rayserve-deployment-70B.yaml
-# Step4: Deploy OpenWebUI Client
-#   kubectl apply -f openai-webui-deployment.yaml
-#   kubectl port-forward service/openai-webui 7860:7860 -n openai-webui
-# Step5: OpenWebUI Client
-#   http://localhost:7860
-#-------------------------------------------------------------------
-
-#-------------------------------------------------------------------
-# Deployment
+# 
+# Step 1: Deploy Base Infrastructure
+# git clone https://github.com/awslabs/ai-on-eks.git
+# cd ai-on-eks/infra/trainium-inferentia/ && ./install.sh
+# 
+# Step 2: Deploy Llama-70B
+# cd ai-on-eks/blueprints/inference/vllm-rayserve-inf2
+# kubectl apply -f vllm-rayserve-deployment-70B.yaml
+# 
+# Detailed Instructions can be found here:
+# https://awslabs.github.io/ai-on-eks/docs/blueprints/inference/Neuron/vllm-ray-inf2
+#
 #-------------------------------------------------------------------
 ---
 apiVersion: v1
@@ -172,6 +165,11 @@ metadata:
 spec:
   serviceUnhealthySecondThreshold: 900
   deploymentUnhealthySecondThreshold: 300
+  # Note on setting TENSOR_PARALLELISM value: 
+  # TENSOR_PARALLELISM controls how vLLM shards the model across available neuron cores.
+  # The number of attention heads implemented by Llama-70b model (64) in this case,
+  # has to be divisible by TENSOR_PARALLELISM (16). vLLM throws an error if its not divisible.
+  # Hence, we are not setting TENSOR_PARALLELIM to maximum available cores on inf2.48xlarge (24).
   serveConfigV2: |
     applications:
       - name: vllm
@@ -263,7 +261,6 @@ spec:
       maxReplicas: 3
       rayStartParams:
         # This setting is critical for inf2/Trn1 node autoscaling with RayServe
-        # set neuron_cores to 2, when running the model on inf2.8xlarge.
         resources: '"{\"neuron_cores\": 24}"'
       template:
         spec:
@@ -277,14 +274,6 @@ spec:
                 exec:
                   command: ["/bin/sh", "-c", "ray stop"]
             resources:
-              # limits: # replace this to use inf2.8xlarge; Takes 10 mins 40 secs to load Llama3 8b model with 21.3GB Accelerator memory
-              #  cpu: "12"
-              #  memory: "110G"
-              #  aws.amazon.com/neuron: "1"
-              # requests:
-              #  cpu: "12"
-              #  memory: "110G"
-              #  aws.amazon.com/neuron: "1"
               limits:
                 cpu: "128"
                 memory: "640G"
