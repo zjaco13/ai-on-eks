@@ -1,5 +1,4 @@
 ---
-sidebar_position: 4
 sidebar_label: AIBrix on EKS
 ---
 import CollapsibleContent from '../../../../src/components/CollapsibleContent';
