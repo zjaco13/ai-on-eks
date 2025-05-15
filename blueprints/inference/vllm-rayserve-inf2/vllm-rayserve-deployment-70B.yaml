@@ -213,7 +213,6 @@ spec:
         num-cpus: "0"
       template:
         spec:
-          schedulerName: my-scheduler # Neuron Scheduler
           containers:
           - name: head
             image: public.ecr.aws/data-on-eks/vllm-ray2.32.0-inf2-llama3:latest
@@ -257,10 +256,6 @@ spec:
           - name: vllm-script
             configMap:
               name: vllm-serve-script
-          nodeSelector:
-            # instanceType: mixed-x86
-            instanceType: x86-cpu-karpenter
-            # workload: rayhead
     workerGroupSpecs:
     - groupName: inf2-group
       replicas: 1
@@ -268,6 +263,7 @@ spec:
       maxReplicas: 3
       rayStartParams:
         # This setting is critical for inf2/Trn1 node autoscaling with RayServe
+        # set neuron_cores to 2, when running the model on inf2.8xlarge.
         resources: '"{\"neuron_cores\": 24}"'
       template:
         spec:
@@ -289,7 +285,7 @@ spec:
               #  cpu: "12"
               #  memory: "110G"
               #  aws.amazon.com/neuron: "1"
-              limits: # replace this to use inf2.48xlarge; Takes 3 mins to load Llama3 8b model with 21.3GB Accelerator memory
+              limits:
                 cpu: "128"
                 memory: "640G"
                 aws.amazon.com/neuron: "12"

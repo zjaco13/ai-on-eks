@@ -195,7 +195,7 @@ requests:
 ```
 
 **Optional: Deploy 70B Model**
-For deploying a llama-70B model on `inf2.48xlarge`, refer to `ai-on-eks/blueprints/inference/vllm-rayserve-inf2/vllm-rayserve-deployment.yaml`. This deployment will take about 60 minutes for downloading the large model and compile it for running on Neuron cores.
+For deploying a llama-70B model on `inf2.48xlarge`, refer to `ai-on-eks/blueprints/inference/vllm-rayserve-inf2/vllm-rayserve-deployment-70B.yaml`. This deployment will take about 60 minutes for downloading the large model and compile it for running on Neuron cores.
 
 **Step 2:** Verify the deployment by running the following commands
 
