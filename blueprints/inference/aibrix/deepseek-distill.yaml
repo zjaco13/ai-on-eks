@@ -23,10 +23,14 @@ spec:
     spec:
       containers:
         - command: ["/bin/sh","-c"]
-          args: ["vllm serve deepseek-ai/DeepSeek-R1-Distill-Llama-8B --host 0.0.0.0 --port 8000 --served-model-name deepseek-r1-distill-llama-8b --max-num-seqs 4 --max-model-len 12288"]
+          args: ["vllm serve $MODEL --served-model-name $SERVED_MODEL_NAME --host 0.0.0.0 --port 8000 --max-num-seqs 4 --max-model-len 12288"]
           env:
             - name: VLLM_LOGGING_LEVEL
               value: "INFO"
+            - name: MODEL
+              value: "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+            - name: SERVED_MODEL_NAME
+              value: "deepseek-r1-distill-llama-8b"
           image: vllm/vllm-openai:v0.7.3
           imagePullPolicy: IfNotPresent
           name: vllm-openai
