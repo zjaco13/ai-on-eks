@@ -221,7 +221,7 @@ variable "enable_aibrix_stack" {
   default     = false
 }
 
-# AiBrix version
+# AIBrix version
 variable "aibrix_stack_version" {
   description = "AIBrix default version"
   type        = string
