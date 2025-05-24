@@ -2,10 +2,7 @@
 # AWS EFS Module: Shared Persistent Storage for Model Caching
 #
 # This module provisions an Amazon EFS (Elastic File System)
-# with mount targets across availability zones. It is used as
-# ReadWriteMany shared storage for NIMCache, allowing cached
-# models to persist across pod restarts and be reused by multiple
-# NIMService pods for faster startup and reduced cold boot latency.
+# with mount targets across availability zones.
 #---------------------------------------------------------------
 module "efs" {
   count   = var.enable_aws_efs_csi_driver ? 1 : 0
@@ -37,8 +34,7 @@ module "efs" {
 #
 # This StorageClass enables dynamic provisioning of EFS volumes
 # using the AWS EFS CSI driver. It is used by NIMCache CRD to create
-# a PersistentVolumeClaim (PVC) with ReadWriteMany access mode,
-# essential for sharing cached models between GPU pods in NIMService.
+# a PersistentVolumeClaim (PVC) with ReadWriteMany access mode.
 #---------------------------------------------------------------
 resource "kubernetes_storage_class_v1" "efs" {
   metadata {
