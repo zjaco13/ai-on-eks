@@ -38,11 +38,6 @@ variable "enable_database_subnets" {
 }
 
 # Infrastructure Variables
-variable "enable_aws_cloudwatch_metrics" {
-  description = "Enable AWS Cloudwatch Metrics addon"
-  type        = bool
-  default     = false
-}
 variable "bottlerocket_data_disk_snapshot_id" {
   description = "Bottlerocket Data Disk Snapshot ID"
   type        = string
