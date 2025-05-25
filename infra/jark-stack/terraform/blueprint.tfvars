@@ -1,6 +1,6 @@
 name                             = "vara-stack"
-region = "us-east-1"
-eks_cluster_version             = "1.32"
+region                           = "us-east-1"
+eks_cluster_version              = "1.32"
 enable_aws_efs_csi_driver        = true
 enable_jupyterhub                = true
 enable_kuberay_operator          = true
@@ -22,13 +22,12 @@ enable_ai_ml_observability_stack = true
 # -------------------------------------------------------------------------------------
 
 enable_cluster_addons = {
-  coredns                        = true
-  kube-proxy                     = true
-  vpc-cni                        = true
-  eks-pod-identity-agent         = true
-  aws-ebs-csi-driver             = false
-  metrics-server                 = true
-  eks-node-monitoring-agent      = false
+  coredns                         = true
+  kube-proxy                      = true
+  vpc-cni                         = true
+  eks-pod-identity-agent          = true
+  aws-ebs-csi-driver              = true
+  metrics-server                  = true
+  eks-node-monitoring-agent       = false
   amazon-cloudwatch-observability = true
 }
-

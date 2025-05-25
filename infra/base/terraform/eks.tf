@@ -19,7 +19,7 @@ locals {
       before_compute = true
     }
 
-    aws-ebs-csi-driver ={
+    aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
       most_recent              = true
     }
@@ -54,7 +54,7 @@ module "eks" {
   authentication_mode                      = "API_AND_CONFIG_MAP"
   enable_cluster_creator_admin_permissions = true
 
-# EKS Add-ons
+  # EKS Add-ons
   cluster_addons = local.cluster_addons
 
   vpc_id = module.vpc.vpc_id

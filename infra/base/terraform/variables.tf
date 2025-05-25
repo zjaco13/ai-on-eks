@@ -39,15 +39,23 @@ variable "enable_database_subnets" {
 
 # EKS Addons
 variable "enable_cluster_addons" {
+  description = <<DESC
+A map of EKS addon names to boolean values that control whether each addon is enabled.
+This allows fine-grained control over which addons are deployed by this Terraform stack.
+To enable or disable an addon, set its value to `true` or `false` in your blueprint.tfvars file.
+If you need to add a new addon, update this variable definition and also adjust the logic
+in the EKS module (e.g., in eks.tf locals) to include any custom configuration needed.
+DESC
+
   type = map(bool)
   default = {
-    coredns                = true
-    kube-proxy             = true
-    vpc-cni                = true
-    eks-pod-identity-agent = true
-    aws-ebs-csi-driver     = true
-    metrics-server         = true
-    eks-node-monitoring-agent              = true
+    coredns                         = true
+    kube-proxy                      = true
+    vpc-cni                         = true
+    eks-pod-identity-agent          = true
+    aws-ebs-csi-driver              = true
+    metrics-server                  = true
+    eks-node-monitoring-agent       = true
     amazon-cloudwatch-observability = true
   }
 }
