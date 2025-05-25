@@ -241,7 +241,7 @@ module "data_addons" {
   #---------------------------------------------------------------
   enable_nvidia_device_plugin = true
   nvidia_device_plugin_helm_config = {
-    version = "v0.17.2"
+    version = "v0.17.1"
     name    = "nvidia-device-plugin"
     values = [
       <<-EOT
@@ -621,6 +621,31 @@ module "data_addons" {
 }
 
 #---------------------------------------------------------------
+# NVIDIA DCGM Exporter for GPU Monitoring
+#---------------------------------------------------------------
+resource "helm_release" "dcgm_exporter" {
+  name             = "dcgm-exporter"
+  repository       = "https://nvidia.github.io/dcgm-exporter/helm-charts"
+  chart            = "dcgm-exporter"
+  version          = "4.1.1"
+  namespace        = "gpu-monitoring"
+  create_namespace = true
+
+  values = [
+    <<-EOT
+      serviceMonitor:
+        enabled: true
+      nodeSelector:
+        nvidia.com/gpu: present
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Exists"
+          effect: "NoSchedule"
+    EOT
+  ]
+}
+
+#---------------------------------------------------------------
 # ETCD for TorchX
 #---------------------------------------------------------------
 data "http" "torchx_etcd_yaml" {
@@ -669,14 +694,6 @@ resource "aws_secretsmanager_secret_version" "grafana" {
 
 resource "kubectl_manifest" "neuron_monitor" {
   yaml_body = file("${path.module}/monitoring/neuron-monitor-daemonset.yaml")
-}
-
-resource "kubectl_manifest" "dcgm" {
-  yaml_body = file("${path.module}/monitoring/dcgm.yaml")
-}
-
-resource "kubectl_manifest" "dcgm_service" {
-  yaml_body = file("${path.module}/monitoring/dcgm-service.yaml")
 }
 
 resource "kubectl_manifest" "efs_sc" {
