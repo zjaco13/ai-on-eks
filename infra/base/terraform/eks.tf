@@ -129,7 +129,7 @@ module "eks" {
       )
 
       # aws ssm get-parameters --names /aws/service/eks/optimized-ami/1.27/amazon-linux-2/recommended/image_id --region us-west-2
-      ami_type       = "AL2023_x86_64_STANDARD" # Use this for Graviton AL2023_ARM_64_STANDARD
+      ami_type     = "AL2023_x86_64_STANDARD" # Use this for Graviton AL2023_ARM_64_STANDARD
       min_size     = 2
       max_size     = 8
       desired_size = 2
