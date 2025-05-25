@@ -1,7 +1,7 @@
-name                          = "mlflow-on-eks"
-enable_amazon_prometheus      = true
-enable_mlflow_tracking        = true
-enable_database_subnets       = true
+name                     = "mlflow-on-eks"
+enable_amazon_prometheus = true
+enable_mlflow_tracking   = true
+enable_database_subnets  = true
 
 # -------------------------------------------------------------------------------------
 # EKS Addons Configuration

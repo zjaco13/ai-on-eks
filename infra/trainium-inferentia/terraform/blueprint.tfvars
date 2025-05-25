@@ -1,13 +1,13 @@
-name                          = "trainium-inferentia"
-eks_cluster_version              = "1.32"
-region                        = "us-west-2"
-enable_aws_efs_csi_driver     = true
-enable_kuberay_operator       = true
-enable_volcano                = true
-enable_torchx_etcd            = true
-enable_mpi_operator           = true
-enable_aws_fsx_csi_driver     = true
-deploy_fsx_volume             = true
+name                      = "trainium-inferentia"
+eks_cluster_version       = "1.32"
+region                    = "us-west-2"
+enable_aws_efs_csi_driver = true
+enable_kuberay_operator   = true
+enable_volcano            = true
+enable_torchx_etcd        = true
+enable_mpi_operator       = true
+enable_aws_fsx_csi_driver = true
+deploy_fsx_volume         = true
 
 # -------------------------------------------------------------------------------------
 # EKS Addons Configuration

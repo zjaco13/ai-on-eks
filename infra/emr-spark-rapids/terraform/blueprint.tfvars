@@ -1,6 +1,6 @@
 name                     = "emr-spark-rapids"
-region                           = "us-east-1"
-eks_cluster_version              = "1.32"
+region                   = "us-east-1"
+eks_cluster_version      = "1.32"
 enable_amazon_prometheus = true
 enable_amazon_emr        = true
 
