@@ -37,6 +37,21 @@ variable "enable_database_subnets" {
   default     = false
 }
 
+# EKS Addons
+variable "enable_cluster_addons" {
+  type = map(bool)
+  default = {
+    coredns                = true
+    kube-proxy             = true
+    vpc-cni                = true
+    eks-pod-identity-agent = true
+    aws-ebs-csi-driver     = true
+    metrics-server         = true
+    eks-node-monitoring-agent              = true
+    amazon-cloudwatch-observability = true
+  }
+}
+
 # Infrastructure Variables
 variable "bottlerocket_data_disk_snapshot_id" {
   description = "Bottlerocket Data Disk Snapshot ID"

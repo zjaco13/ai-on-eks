@@ -1,3 +1,42 @@
+#---------------------------------------
+# Amazon EKS Managed Add-ons
+#---------------------------------------
+
+locals {
+  base_addons = {
+    for name, enabled in var.enable_cluster_addons :
+    name => {} if enabled
+  }
+
+  # Extended configurations used for specific addons with custom settings
+  addon_overrides = {
+    vpc-cni = {
+      most_recent    = true
+      before_compute = true
+    }
+
+    eks-pod-identity-agent = {
+      before_compute = true
+    }
+
+    aws-ebs-csi-driver ={
+      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
+      most_recent              = true
+    }
+
+    amazon-cloudwatch-observability = {
+      preserve                 = true
+      service_account_role_arn = aws_iam_role.cloudwatch_observability_role.arn
+    }
+  }
+
+  # Merge base with overrides
+  cluster_addons = {
+    for name, config in local.base_addons :
+    name => merge(config, lookup(local.addon_overrides, name, {}))
+  }
+}
+
 #---------------------------------------------------------------
 # EKS Cluster
 #---------------------------------------------------------------
@@ -15,31 +54,8 @@ module "eks" {
   authentication_mode                      = "API_AND_CONFIG_MAP"
   enable_cluster_creator_admin_permissions = true
 
-  #---------------------------------------
-  # Amazon EKS Managed Add-ons
-  #---------------------------------------
-  cluster_addons = {
-    coredns                   = {}
-    eks-node-monitoring-agent = {}
-    eks-pod-identity-agent = {
-      before_compute = true
-    }
-    kube-proxy = {}
-    vpc-cni = {
-      most_recent    = true
-      before_compute = true
-    }
-    aws-ebs-csi-driver = {
-      service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
-      most_recent              = true
-    }
-
-    metrics-server = {}
-    amazon-cloudwatch-observability = {
-      preserve                 = true
-      service_account_role_arn = aws_iam_role.cloudwatch_observability_role.arn
-    }
-  }
+# EKS Add-ons
+  cluster_addons = local.cluster_addons
 
   vpc_id = module.vpc.vpc_id
 
