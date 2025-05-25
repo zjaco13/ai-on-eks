@@ -220,3 +220,9 @@ variable "oauth_username_key" {
   description = "oauth field for the username. e.g. 'preferred_username' Only needed if auth mechanism is set to oauth"
   default     = ""
 }
+
+variable "kms_key_admin_roles" {
+  description = "list of role ARNs to add to the KMS policy"
+  type        = list(string)
+  default     = []
+}
