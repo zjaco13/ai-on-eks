@@ -106,9 +106,13 @@ kubectl get nodepools
 ```
 
 ```text
-NAME                NODECLASS
-g5-gpu-karpenter    g5-gpu-karpenter
-x86-cpu-karpenter   x86-cpu-karpenter
+NAME                NODECLASS           NODES   READY   AGE
+g5-gpu-karpenter    g5-gpu-karpenter    0       True    6h59m
+g6-gpu-karpenter    g6-gpu-karpenter    1       True    6h59m
+g6e-gpu-karpenter   g6e-gpu-karpenter   0       True    51m
+inferentia-inf2     inferentia-inf2     0       True    6h59m
+trainium-trn1       trainium-trn1       0       True    6h59m
+x86-cpu-karpenter   x86-cpu-karpenter   3       True    6h59m
 ```
 
 Verify the NVIDIA Device plugin

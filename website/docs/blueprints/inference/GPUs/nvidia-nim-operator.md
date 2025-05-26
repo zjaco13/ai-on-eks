@@ -229,11 +229,12 @@ $ kubectl get nodepools
 
 ```
 NAME                NODECLASS           NODES   READY   AGE
-g5-gpu-karpenter    g5-gpu-karpenter    1       True    47h
-g6-gpu-karpenter    g6-gpu-karpenter    0       True    7h56m
-inferentia-inf2     inferentia-inf2     0       False   47h
-trainium-trn1       trainium-trn1       0       False   47h
-x86-cpu-karpenter   x86-cpu-karpenter   0       True    47h
+g5-gpu-karpenter    g5-gpu-karpenter    0       True    7h3m
+g6-gpu-karpenter    g6-gpu-karpenter    1       True    7h3m
+g6e-gpu-karpenter   g6e-gpu-karpenter   0       True    55m
+inferentia-inf2     inferentia-inf2     0       True    7h3m
+trainium-trn1       trainium-trn1       0       True    7h3m
+x86-cpu-karpenter   x86-cpu-karpenter   3       True    7h3m
 ```
 
 </details>
