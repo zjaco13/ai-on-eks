@@ -7,3 +7,7 @@ resource "kubectl_manifest" "nvidia_nim_yaml" {
   count     = var.enable_nvidia_nim_stack ? 1 : 0
   yaml_body = file("${path.module}/argocd-addons/nvidia-nim-operator.yaml")
 }
+
+resource "kubectl_manifest" "nvidia_dcgm_helm" {
+  yaml_body = file("${path.module}/argocd-addons/nvidia-dcgm-helm.yaml")
+}

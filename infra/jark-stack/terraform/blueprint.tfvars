@@ -1,4 +1,4 @@
-name                             = "vara-stack"
+name                             = "jark-stack"
 region                           = "us-east-1"
 eks_cluster_version              = "1.32"
 enable_aws_efs_csi_driver        = true

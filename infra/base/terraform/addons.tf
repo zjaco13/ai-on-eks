@@ -93,7 +93,7 @@ module "eks_blueprints_addons" {
     }
   }
   karpenter = {
-    chart_version       = "1.2.1"
+    chart_version       = "1.4.0"
     repository_username = data.aws_ecrpublic_authorization_token.token.user_name
     repository_password = data.aws_ecrpublic_authorization_token.token.password
     source_policy_documents = [
@@ -617,31 +617,6 @@ module "data_addons" {
   depends_on = [
     kubernetes_secret_v1.huggingface_token,
     kubernetes_config_map_v1.notebook
-  ]
-}
-
-#---------------------------------------------------------------
-# NVIDIA DCGM Exporter for GPU Monitoring
-#---------------------------------------------------------------
-resource "helm_release" "dcgm_exporter" {
-  name             = "dcgm-exporter"
-  repository       = "https://nvidia.github.io/dcgm-exporter/helm-charts"
-  chart            = "dcgm-exporter"
-  version          = "4.1.1"
-  namespace        = "gpu-monitoring"
-  create_namespace = true
-
-  values = [
-    <<-EOT
-      serviceMonitor:
-        enabled: true
-      nodeSelector:
-        nvidia.com/gpu: present
-      tolerations:
-        - key: "nvidia.com/gpu"
-          operator: "Exists"
-          effect: "NoSchedule"
-    EOT
   ]
 }
 
