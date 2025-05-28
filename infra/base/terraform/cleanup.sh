@@ -4,10 +4,10 @@ TERRAFORM_COMMAND="terraform destroy -auto-approve"
 CLUSTERNAME="ai-stack"
 REGION="region"
 # Check if blueprint.tfvars exists
-if [ -f "blueprint.tfvars" ]; then
-  TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=blueprint.tfvars"
-  CLUSTERNAME="$(echo "var.name" | terraform console -var-file=blueprint.tfvars | tr -d '"')"
-  REGION="$(echo "var.region" | terraform console -var-file=blueprint.tfvars | tr -d '"')"
+if [ -f "../blueprint.tfvars" ]; then
+  TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=../blueprint.tfvars"
+  CLUSTERNAME="$(echo "var.name" | terraform console -var-file=../blueprint.tfvars | tr -d '"')"
+  REGION="$(echo "var.region" | terraform console -var-file=../blueprint.tfvars | tr -d '"')"
 fi
 echo "Destroying Terraform $CLUSTERNAME"
 echo "Destroying RayService..."

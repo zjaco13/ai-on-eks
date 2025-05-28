@@ -1,6 +1,7 @@
 #!/bin/bash
 # Copy the base into the folder
-cp -r ../base/terraform/* ./terraform
+mkdir -p ./terraform/_LOCAL
+cp -r ../base/terraform/* ./terraform/_LOCAL
 
-cd terraform
+cd terraform/_LOCAL
 source ./install.sh
