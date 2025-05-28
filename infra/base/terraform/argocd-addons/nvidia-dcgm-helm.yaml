@@ -13,9 +13,6 @@ spec:
     targetRevision: "4.1.1"
     helm:
       values: |
-        # Only override what's different from defaults
-        
-        # Production resource limits (default has no limits)
         resources:
           limits:
             memory: "1Gi"
@@ -23,20 +20,20 @@ spec:
           requests:
             memory: "512Mi"
             cpu: "100m"
-        
+
         serviceMonitor:
           additionalLabels:
             release: prometheus
-        
+
         # GPU node targeting
         nodeSelector:
           nvidia.com/gpu: "true"
-        
+
         tolerations:
           - key: "nvidia.com/gpu"
             operator: "Exists"
             effect: "NoSchedule"
-        
+
         # Affinity for GPU nodes
         affinity:
           nodeAffinity:
@@ -46,11 +43,11 @@ spec:
                 - key: nvidia.com/gpu
                   operator: In
                   values: ["true"]
-  
+
   destination:
     server: https://kubernetes.default.svc
     namespace: gpu-monitoring
-  
+
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
