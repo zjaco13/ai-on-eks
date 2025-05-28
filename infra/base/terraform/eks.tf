@@ -69,7 +69,6 @@ module "eks" {
     "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"],
     var.kms_key_admin_roles,
     [data.aws_iam_session_context.current.issuer_arn]
-
   ))
 
   # Add security group rules on the node group security group to
