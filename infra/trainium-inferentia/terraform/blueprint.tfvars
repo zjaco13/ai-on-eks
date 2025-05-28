@@ -1,6 +1,6 @@
-name                      = "trainium-inferentia"
-eks_cluster_version       = "1.32"
-region                    = "us-west-2"
+name = "trainium-inferentia"
+# eks_cluster_version       = "1.32"
+# region                    = "us-west-2"
 enable_aws_efs_csi_driver = true
 enable_kuberay_operator   = true
 enable_volcano            = true
@@ -21,13 +21,13 @@ deploy_fsx_volume         = true
 #
 # -------------------------------------------------------------------------------------
 
-enable_cluster_addons = {
-  coredns                         = true
-  kube-proxy                      = true
-  vpc-cni                         = true
-  eks-pod-identity-agent          = true
-  aws-ebs-csi-driver              = true
-  metrics-server                  = true
-  eks-node-monitoring-agent       = false
-  amazon-cloudwatch-observability = true
-}
+# enable_cluster_addons = {
+#   coredns                         = true
+#   kube-proxy                      = true
+#   vpc-cni                         = true
+#   eks-pod-identity-agent          = true
+#   aws-ebs-csi-driver              = true
+#   metrics-server                  = true
+#   eks-node-monitoring-agent       = false
+#   amazon-cloudwatch-observability = true
+# }

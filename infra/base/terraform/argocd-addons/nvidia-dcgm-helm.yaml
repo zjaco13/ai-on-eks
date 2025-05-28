@@ -23,7 +23,7 @@ spec:
 
         serviceMonitor:
           additionalLabels:
-            release: prometheus
+            release: kube-prometheus-stack
 
         # GPU node targeting
         nodeSelector:

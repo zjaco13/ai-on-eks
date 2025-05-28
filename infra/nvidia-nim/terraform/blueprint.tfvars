@@ -1,5 +1,6 @@
-name                      = "nvidia-nim-eks"
-region                    = "us-west-2"
+name = "nvidia-nim-eks"
+# region                    = "us-east-1"
+# eks_cluster_version       = "1.32"
 enable_aws_efs_csi_driver = true
 enable_argocd             = true
 enable_nvidia_nim_stack   = true
@@ -16,13 +17,13 @@ enable_nvidia_nim_stack   = true
 #
 # -------------------------------------------------------------------------------------
 
-enable_cluster_addons = {
-  coredns                         = true
-  kube-proxy                      = true
-  vpc-cni                         = true
-  eks-pod-identity-agent          = true
-  aws-ebs-csi-driver              = true
-  metrics-server                  = true
-  eks-node-monitoring-agent       = false
-  amazon-cloudwatch-observability = true
-}
+# enable_cluster_addons = {
+#   coredns                         = true
+#   kube-proxy                      = true
+#   vpc-cni                         = true
+#   eks-pod-identity-agent          = true
+#   aws-ebs-csi-driver              = true
+#   metrics-server                  = true
+#   eks-node-monitoring-agent       = false
+#   amazon-cloudwatch-observability = true
+# }
