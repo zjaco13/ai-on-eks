@@ -153,6 +153,13 @@ variable "enable_mpi_operator" {
   default     = false
 }
 
+# ArgoCD Addons
+variable "enable_nvidia_nim_stack" {
+  description = "Flag to enable the NVIDIA NIM Stack addon"
+  type        = bool
+  default     = false
+}
+
 # Jupyterhub Specific Variables
 
 # NOTE: You need to use private domain or public domain name with ACM certificate

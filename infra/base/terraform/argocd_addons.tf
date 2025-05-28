@@ -12,3 +12,8 @@ resource "kubectl_manifest" "aibrix_core_yaml" {
   yaml_body = templatefile("${path.module}/argocd-addons/aibrix-core.yaml", { aibrix_version = var.aibrix_stack_version })
   depends_on = [module.eks_blueprints_addons]
 }
+
+resource "kubectl_manifest" "nvidia_nim_yaml" {
+  count     = var.enable_nvidia_nim_stack ? 1 : 0
+  yaml_body = file("${path.module}/argocd-addons/nvidia-nim-operator.yaml")
+}

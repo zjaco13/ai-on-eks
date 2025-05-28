@@ -51,59 +51,12 @@ resource "kubernetes_secret_v1" "jupyterhub_single_user" {
   type = "kubernetes.io/service-account-token"
 }
 
-#---------------------------------------------------------------
-# EFS Filesystem for private volumes per user
-# This will be replaced with Dynamic EFS provision using EFS CSI Driver
-#---------------------------------------------------------------
-resource "aws_efs_file_system" "efs" {
-  count     = var.enable_jupyterhub ? 1 : 0
-  encrypted = true
-
-  tags = local.tags
-}
-
-#---------------------------------------------------------------
-# module.vpc.private_subnets = [AZ1_10.x, AZ2_10.x, AZ1_100.x, AZ2_100.x]
-# We use index 2 and 3 to select the subnet in AZ1 with the 100.x CIDR:
-# Create EFS mount targets for the 3rd  subnet
-resource "aws_efs_mount_target" "efs_mt_1" {
-  count           = var.enable_jupyterhub ? 1 : 0
-  file_system_id  = aws_efs_file_system.efs[count.index].id
-  subnet_id       = module.vpc.private_subnets[2]
-  security_groups = [aws_security_group.efs[count.index].id]
-}
-
-# Create EFS mount target for the 4th subnet
-resource "aws_efs_mount_target" "efs_mt_2" {
-  count           = var.enable_jupyterhub ? 1 : 0
-  file_system_id  = aws_efs_file_system.efs[count.index].id
-  subnet_id       = module.vpc.private_subnets[3]
-  security_groups = [aws_security_group.efs[count.index].id]
-}
-
-resource "aws_security_group" "efs" {
-  count       = var.enable_jupyterhub ? 1 : 0
-  name        = "${local.name}-efs"
-  description = "Allow inbound NFS traffic from private subnets of the VPC"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    description = "Allow NFS 2049/tcp"
-    cidr_blocks = module.vpc.vpc_secondary_cidr_blocks
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-  }
-
-  tags = local.tags
-}
-
 #---------------------------------------
 # EFS Configuration
 #---------------------------------------
 resource "aws_efs_access_point" "efs_persist_ap" {
   count          = var.enable_jupyterhub ? 1 : 0
-  file_system_id = aws_efs_file_system.efs[count.index].id
+  file_system_id = module.efs[0].id
   posix_user {
     gid            = 0
     uid            = 0
@@ -117,10 +70,11 @@ resource "aws_efs_access_point" "efs_persist_ap" {
       permissions = 700
     }
   }
+  depends_on = [module.efs]
 }
 resource "aws_efs_access_point" "efs_shared_ap" {
   count          = var.enable_jupyterhub ? 1 : 0
-  file_system_id = aws_efs_file_system.efs[count.index].id
+  file_system_id = module.efs[0].id
   posix_user {
     gid            = 0
     uid            = 0
@@ -134,6 +88,7 @@ resource "aws_efs_access_point" "efs_shared_ap" {
       permissions = 700
     }
   }
+  depends_on = [module.efs]
 }
 
 module "efs_config" {
@@ -158,7 +113,7 @@ module "efs_config" {
         <<-EOT
           pv:
             name: efs-persist
-            volumeHandle: ${aws_efs_file_system.efs[count.index].id}::${aws_efs_access_point.efs_persist_ap[count.index].id}
+            volumeHandle: ${module.efs[0].id}::${aws_efs_access_point.efs_persist_ap[count.index].id}
           pvc:
             name: efs-persist
         EOT
@@ -175,7 +130,7 @@ module "efs_config" {
         <<-EOT
           pv:
             name: efs-persist-shared
-            volumeHandle: ${aws_efs_file_system.efs[count.index].id}::${aws_efs_access_point.efs_shared_ap[count.index].id}
+            volumeHandle: ${module.efs[0].id}::${aws_efs_access_point.efs_shared_ap[count.index].id}
           pvc:
             name: efs-persist-shared
         EOT
@@ -183,8 +138,12 @@ module "efs_config" {
     }
   }
 
-  depends_on = [kubernetes_namespace.jupyterhub]
+  depends_on = [
+    kubernetes_namespace.jupyterhub,
+    module.efs
+  ]
 }
+
 #---------------------------------------------------------------
 # Additional Resources
 #---------------------------------------------------------------
