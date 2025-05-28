@@ -668,7 +668,8 @@ resource "aws_secretsmanager_secret_version" "grafana" {
 }
 
 resource "kubectl_manifest" "neuron_monitor" {
-  yaml_body = file("${path.module}/monitoring/neuron-monitor-daemonset.yaml")
+  yaml_body  = file("${path.module}/monitoring/neuron-monitor-daemonset.yaml")
+  depends_on = [module.eks_blueprints_addons]
 }
 
 resource "kubectl_manifest" "efs_sc" {

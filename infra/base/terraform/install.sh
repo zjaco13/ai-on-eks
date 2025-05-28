@@ -11,8 +11,8 @@ terraform init -upgrade
 
 TERRAFORM_COMMAND="terraform apply -auto-approve"
 # Check if blueprint.tfvars exists
-if [ -f "blueprint.tfvars" ]; then
-  TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=blueprint.tfvars"
+if [ -f "../blueprint.tfvars" ]; then
+  TERRAFORM_COMMAND="$TERRAFORM_COMMAND -var-file=../blueprint.tfvars"
 fi
 
 # Apply modules in sequence
