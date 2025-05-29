@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aibrix-dependency
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/vllm-project/aibrix.git
+    targetRevision: ${aibrix_version}
+    path: config/dependency/envoy-gateway
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: envoy-gateway-system
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated: {}

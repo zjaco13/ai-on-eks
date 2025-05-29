@@ -220,3 +220,17 @@ variable "oauth_username_key" {
   description = "oauth field for the username. e.g. 'preferred_username' Only needed if auth mechanism is set to oauth"
   default     = ""
 }
+
+# Flag to enable AIBrix stack
+variable "enable_aibrix_stack" {
+  description = "Enable AIBrix addon"
+  type        = bool
+  default     = false
+}
+
+# AIBrix version
+variable "aibrix_stack_version" {
+  description = "AIBrix default version"
+  type        = string
+  default     = "v0.2.1"
+}

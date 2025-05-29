@@ -36,34 +36,35 @@ Each stack inherits the `base` stack's components. These components include:
 
 ### Deployment
 
-| Variable Name                            | Description                                         | Default                  |
-|------------------------------------------|-----------------------------------------------------|--------------------------|
-| `name`                                   | The name of the Kubernetes cluster                  | `ai-stack`               |
-| `region`                                 | The region for the cluster                          | us-east-1                |
-| `eks_cluster_version`                    | The version of EKS to use                           | 1.32                     |
-| `vpc_cidr`                               | The CIDR used for the VPC                           | `10.1.0.0/21`            |
-| `secondary_cidr_blocks`                  | Secondary CIDR for the VPC                          | `100.64.0.0/16`          |
-| `enable_aws_cloudwatch_metrics`          | Enable the AWS Cloudwatch Metrics addon             | `false`                  |
-| `bottlerocket_data_disk_snapshot_id`     | Attach a snapshot ID to the deployed nodes          | `""`                     |
-| `enable_aws_efs_csi_driver`              | Enable the AWS EFS CSI driver                       | `false`                  |
-| `enable_aws_efa_k8s_device_plugin`       | Enable the AWS EFA device plugin                    | `false`                  |
-| `enable_aws_fsx_csi_driver`              | Enable the FSx device plugin                        | `false`                  |
-| `deploy_fsx_volume`                      | Deploy a simple FSx volume                          | `false`                  |
-| `enable_amazon_prometheus`               | Enable Amazon Managed Prometheus                    | `false`                  |
-| `enable_amazon_emr`                      | Set up Amazon EMR                                   | `false`                  |
-| `enable_kube_prometheus_stack`           | Enable the Kube Prometheus addon                    | `false`                  |
-| `enable_kubecost`                        | Enable Kubecost                                     | `false`                  |
-| `enable_argo_workflows`                  | Enable Argo Workflow                                | `false`                  |
-| `enable_argo_events`                     | Enable Argo Events                                  | `false`                  |
-| `enable_mlflow_tracking`                 | Enable MLFlow Tracking                              | `false`                  |
-| `enable_jupyterhub`                      | Enable JupyterHub                                   | `false`                  |
-| `enable_volcano`                         | Enable Volcano                                      | `false`                  |
-| `enable_kuberay_operator`                | Enable KubeRay                                      | `false`                  |
-| `huggingface_token`                      | Hugging Face token to use in environment            | `DUMMY_TOKEN_REPLACE_ME` |
-| `enable_rayserve_ha_elastic_cache_redis` | Enable Rayserve high availability using ElastiCache | `false`                  |
-| `enable_torchx_etcd`                     | Enable etcd for torchx                              | `false`                  |
-| `enable_mpi_operator`                    | Enable the MPIO perator                             | `false`                  |
-
+| Variable Name                            | Description                                        | Default                 |
+|------------------------------------------|----------------------------------------------------|-------------------------|
+| `name`                                   | The name of the Kubernetes cluster                 | `ai-stack`              |
+| `region`                                 | The region for the cluster                         | us-east-1               |
+| `eks_cluster_version`                    | The version of EKS to use                          | 1.32                    |
+| `vpc_cidr`                               | The CIDR used for the VPC                          | `10.1.0.0/21`           |
+| `secondary_cidr_blocks`                  | Secondary CIDR for the VPC                         | `100.64.0.0/16`         |
+| `enable_aws_cloudwatch_metrics`          | Enable the AWS Cloudwatch Metrics addon            | `false`                 |
+| `bottlerocket_data_disk_snapshot_id`     | Attach a snapshot ID to the deployed nodes         | `""`                    |
+| `enable_aws_efs_csi_driver`              | Enable the AWS EFS CSI driver                      | `false`                 |
+| `enable_aws_efa_k8s_device_plugin`       | Enable the AWS EFA device plugin                   | `false`                 |
+| `enable_aws_fsx_csi_driver`              | Enable the FSx device plugin                       | `false`                 |
+| `deploy_fsx_volume`                      | Deploy a simple FSx volume                         | `false`                 |
+| `enable_amazon_prometheus`               | Enable Amazon Managed Prometheus                   | `false`                 |
+| `enable_amazon_emr`                      | Set up Amazon EMR                                  | `false`                 |
+| `enable_kube_prometheus_stack`           | Enable the Kube Prometheus addon                   | `false`                 |
+| `enable_kubecost`                        | Enable Kubecost                                    | `false`                 |
+| `enable_argo_workflows`                  | Enable Argo Workflow                               | `false`                 |
+| `enable_argo_events`                     | Enable Argo Events                                 | `false`                 |
+| `enable_mlflow_tracking`                 | Enable MLFlow Tracking                             | `false`                 |
+| `enable_jupyterhub`                      | Enable JupyterHub                                  | `false`                 |
+| `enable_volcano`                         | Enable Volcano                                     | `false`                 |
+| `enable_kuberay_operator`                | Enable KubeRay                                     | `false`                 |
+| `huggingface_token`                      | Hugging Face token to use in environment           | `DUMMY_TOKEN_REPLACE_ME` |
+| `enable_rayserve_ha_elastic_cache_redis` | Enable Rayserve high availability using ElastiCache | `false`                 |
+| `enable_torchx_etcd`                     | Enable etcd for torchx                             | `false`                 |
+| `enable_mpi_operator`                    | Enable the MPIO perator                            | `false`                 |
+| `enable_aibrix_stack`                    | Enable the AIBrix stack                            | `false`                 |
+| `aibrix_stack_version`                   | AIBrix Stack version                               | `v0.2.1`                |
 ### JupyterHub
 
 | Variable Name                 | Description                                                                           | Default |
