@@ -1,9 +1,9 @@
-name = "nvidia-nim-eks"
-# region                    = "us-east-1"
-# eks_cluster_version       = "1.32"
+name                      = "nvidia-nim-eks"
 enable_aws_efs_csi_driver = true
 enable_argocd             = true
 enable_nvidia_nim_stack   = true
+# region                    = "us-west-2"
+# eks_cluster_version       = "1.32"
 
 # -------------------------------------------------------------------------------------
 # EKS Addons Configuration
