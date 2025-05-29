@@ -8,6 +8,7 @@ website/package-lock.json
 
 # Local .terraform directories
 **/.terraform/*
+**/_LOCAL/*
 
 # Terraform lockfile
 .terraform.lock.hcl
