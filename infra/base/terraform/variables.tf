@@ -239,8 +239,22 @@ variable "oauth_username_key" {
   default     = ""
 }
 
+# List of role ARNs to add to the KMS policy
 variable "kms_key_admin_roles" {
   description = "list of role ARNs to add to the KMS policy"
   type        = list(string)
   default     = []
+
+# Flag to enable AIBrix stack
+variable "enable_aibrix_stack" {
+  description = "Enable AIBrix addon"
+  type        = bool
+  default     = false
+}
+
+# AIBrix version
+variable "aibrix_stack_version" {
+  description = "AIBrix default version"
+  type        = string
+  default     = "v0.2.1"
 }

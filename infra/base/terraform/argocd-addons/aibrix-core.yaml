@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aibrix-release
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/vllm-project/aibrix.git
+    targetRevision: ${aibrix_version}
+    path: config/overlays/release
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aibrix-system
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated: {}
+  ignoreDifferences:
+    - group: gateway.envoyproxy.io
+      kind: EnvoyExtensionPolicy
+      jqPathExpressions:
+        - .spec.extProc[].backendRefs[].group
+        - .spec.extProc[].backendRefs[].kind
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      jqPathExpressions:
+        - .spec.parentRefs[].group
+        - .spec.parentRefs[].kind
+        - .spec.rules[].backendRefs[].group
+        - .spec.rules[].backendRefs[].kind
+        - .spec.rules[].backendRefs[].weight
