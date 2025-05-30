@@ -84,24 +84,24 @@ Ensure that you have installed the following tools on your machine.
 
 ### Deploy
 
-Clone the repository
+**1. Clone the repository:**
 
 ```bash
 git clone https://github.com/awslabs/ai-on-eks.git
 ```
+
 :::info
 If you are using profile for authentication
 set your `export AWS_PROFILE="<PROFILE_name>"` to the desired profile name
 :::
 
-Navigate into one of the example directories and run `install.sh` script
+**2. Review and customize configurations:**
 
-:::info
-Ensure that you update the region in the `variables.tf` file before deploying the blueprint.
-Additionally, confirm that your local region setting matches the specified region to prevent any discrepancies.
-For example, set your `export AWS_DEFAULT_REGION="<REGION>"` to the desired region:
-:::
+- Check available addons in `infra/base/terraform/variables.tf`
+- Modify addon settings in `infra/jark-stack/terraform/blueprint.tfvars` as needed
+- Update the AWS region in `blueprint.tfvars`
 
+**3. Navigate to the deployment directory and run the install script:**
 
 ```bash
 cd ai-on-eks/infra/jark-stack && chmod +x install.sh
@@ -125,22 +125,12 @@ kubectl get nodes
 ```
 
 ```bash
-NAME                          STATUS   ROLES    AGE   VERSION
-ip-10-1-26-241.ec2.internal   Ready    <none>   10h   v1.24.9-eks-49d8fe8
-ip-10-1-4-21.ec2.internal     Ready    <none>   10h   v1.24.9-eks-49d8fe8
-ip-10-1-40-196.ec2.internal   Ready    <none>   10h   v1.24.9-eks-49d8fe8
+NAME                             STATUS   ROLES    AGE     VERSION
+ip-100-64-218-158.ec2.internal   Ready    <none>   3h13m   v1.32.3-eks-473151a
+ip-100-64-39-78.ec2.internal     Ready    <none>   3h13m   v1.32.3-eks-473151a
 ```
 
 Next, lets verify all the pods are running.
-
-```bash
-kubectl get pods -n kuberay-operator
-```
-
-```bash
-NAME                               READY   STATUS    RESTARTS        AGE
-kuberay-operator-7b5c85998-vfsjr   1/1     Running   1 (1h37m ago)   1h
-```
 
 ```bash
 kubectl get deployments -A
@@ -148,14 +138,38 @@ kubectl get deployments -A
 
 ```bash
 NAMESPACE              NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
-ingress-nginx          ingress-nginx-controller                             1/1     1            1           36h
-jupyterhub             hub                                                  1/1     1            1           36h
-jupyterhub             proxy                                                1/1     1            1           36h
-kube-system            aws-load-balancer-controller                         2/2     2            2           36h
-kube-system            coredns                                              2/2     2            2           2d5h
-kube-system            ebs-csi-controller                                   2/2     2            2           2d5h
-kuberay-operator       kuberay-operator                                     1/1     1            1           36h
-nvidia-device-plugin   nvidia-device-plugin-node-feature-discovery-master   1/1     1
+amazon-cloudwatch      amazon-cloudwatch-observability-controller-manager   1/1     1            1           3h3m
+argo-events            argo-events-controller-manager                       1/1     1            1           3h2m
+argo-events            events-webhook                                       1/1     1            1           3h2m
+argo-workflows         argo-workflows-server                                1/1     1            1           3h2m
+argo-workflows         argo-workflows-workflow-controller                   1/1     1            1           3h2m
+argocd                 argocd-applicationset-controller                     1/1     1            1           3h2m
+argocd                 argocd-dex-server                                    1/1     1            1           3h2m
+argocd                 argocd-notifications-controller                      1/1     1            1           3h2m
+argocd                 argocd-redis                                         1/1     1            1           3h2m
+argocd                 argocd-repo-server                                   1/1     1            1           3h2m
+argocd                 argocd-server                                        1/1     1            1           3h2m
+ingress-nginx          ingress-nginx-controller                             1/1     1            1           3h1m
+jupyterhub             hub                                                  1/1     1            1           3h1m
+jupyterhub             proxy                                                1/1     1            1           3h1m
+jupyterhub             user-scheduler                                       2/2     2            2           3h1m
+karpenter              karpenter                                            2/2     2            2           3h1m
+kube-system            aws-load-balancer-controller                         2/2     2            2           3h1m
+kube-system            coredns                                              2/2     2            2           3h8m
+kube-system            ebs-csi-controller                                   2/2     2            2           3h4m
+kube-system            efs-csi-controller                                   2/2     2            2           3h2m
+kube-system            k8s-neuron-scheduler                                 1/1     1            1           3h1m
+kube-system            metrics-server                                       2/2     2            2           3h4m
+kube-system            my-scheduler                                         1/1     1            1           3h1m
+kuberay-operator       kuberay-operator                                     1/1     1            1           3h1m
+monitoring             fluent-operator                                      1/1     1            1           178m
+monitoring             kube-prometheus-stack-grafana                        1/1     1            1           178m
+monitoring             kube-prometheus-stack-kube-state-metrics             1/1     1            1           178m
+monitoring             kube-prometheus-stack-operator                       1/1     1            1           178m
+monitoring             opencost                                             1/1     1            1           178m
+monitoring             opensearch-dashboards                                2/2     2            2           177m
+monitoring             opensearch-operator-controller-manager               1/1     1            1           178m
+nvidia-device-plugin   nvidia-device-plugin-node-feature-discovery-master   1/1     1            1           23m
 ```
 
 :::info

@@ -6,7 +6,7 @@ variable "name" {
 
 variable "region" {
   description = "region"
-  default     = "us-east-1"
+  default     = "us-west-2"
   type        = string
 }
 
@@ -37,12 +37,30 @@ variable "enable_database_subnets" {
   default     = false
 }
 
-# Infrastructure Variables
-variable "enable_aws_cloudwatch_metrics" {
-  description = "Enable AWS Cloudwatch Metrics addon"
-  type        = bool
-  default     = false
+# EKS Addons
+variable "enable_cluster_addons" {
+  description = <<DESC
+A map of EKS addon names to boolean values that control whether each addon is enabled.
+This allows fine-grained control over which addons are deployed by this Terraform stack.
+To enable or disable an addon, set its value to `true` or `false` in your blueprint.tfvars file.
+If you need to add a new addon, update this variable definition and also adjust the logic
+in the EKS module (e.g., in eks.tf locals) to include any custom configuration needed.
+DESC
+
+  type = map(bool)
+  default = {
+    coredns                         = true
+    kube-proxy                      = true
+    vpc-cni                         = true
+    eks-pod-identity-agent          = true
+    aws-ebs-csi-driver              = true
+    metrics-server                  = true
+    eks-node-monitoring-agent       = true
+    amazon-cloudwatch-observability = true
+  }
 }
+
+# Infrastructure Variables
 variable "bottlerocket_data_disk_snapshot_id" {
   description = "Bottlerocket Data Disk Snapshot ID"
   type        = string
@@ -220,6 +238,12 @@ variable "oauth_username_key" {
   description = "oauth field for the username. e.g. 'preferred_username' Only needed if auth mechanism is set to oauth"
   default     = ""
 }
+
+# List of role ARNs to add to the KMS policy
+variable "kms_key_admin_roles" {
+  description = "list of role ARNs to add to the KMS policy"
+  type        = list(string)
+  default     = []
 
 # Flag to enable AIBrix stack
 variable "enable_aibrix_stack" {
