@@ -37,6 +37,7 @@ module "efs" {
 # a PersistentVolumeClaim (PVC) with ReadWriteMany access mode.
 #---------------------------------------------------------------
 resource "kubernetes_storage_class_v1" "efs" {
+  count = var.enable_aws_efs_csi_driver ? 1 : 0
   metadata {
     name = "efs-sc-dynamic"
   }
