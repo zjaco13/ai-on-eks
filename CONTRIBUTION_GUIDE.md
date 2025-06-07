@@ -9,8 +9,9 @@ we make changes to this repository.
 
 A few things to keep in mind when contributing anything to this repository:
 
-1) Open a discussion first: before committing code, please open a discussion so we can help guide.
-2) precommit checks: make sure to install precommit using `pre-commit install`. This will ensure that terraform is
+1) Open a Github issue first: before committing code, please open a Github issue describing your proposed changes so we
+   can provide guidance and avoid duplicate work.
+2) Pre-commit checks: make sure to install pre-commit using `pre-commit install`. This will ensure that terraform is
    linted correctly, whitespace is properly added at the end of the file, and that you are not accidentally committing
    secrets to the repository. You may need to install some tools before precommit will run correctly. Please check
    `.pre-commit-config.yaml` for instructions for each tool.
@@ -23,24 +24,23 @@ blueprint).
 
 Infrastructure is separated into 2 levels: Pre Cluster/Managed and Post Cluster
 
-1) Pre Cluster: These are the components that are required for creating a cluster and ones managed by AWS. This includes
-   the VPC, security groups, subnets, managed databases, managed observability, the cluster itself and the
-   infrastructure required within the cluster to get it to a functional state: VPC-CNI, coreDNS, storage controllers,
-   etc.
+1) Pre Cluster: These are the components that are required for creating a cluster (VPC, subnets, security groups), the
+   cluster itself (EKS) and, optionally, other services provided by AWS (databases, observability). The additional EKS
+   addons are also part of this level: VPC-CNI, coreDNS, storage controllers, etc.
 2) Post Cluster: These are the Kubernetes resources that are deployed after the cluster is running and able to be set up
    for AI. These are things like observability tooling, controllers for AI/ML, self-managed databases (RAG, RDBMS), etc.
 
 All infrastructure is available in `infra/base/terraform`. Pre Cluster infrastructure is created using terraform. You
 will find these as separate `.tf` files. If you would like to contribute new Pre Cluster infrastructure, please create a
-new terraform module for it.
+new terraform resources for it.
 
 All post cluster infrastructure should be deployed by ArgoCD. To create a new ArgoCD deployment for helm, kustomize, or
 other, create the ArgoCD Application in `infra/base/terraform/argocd-addons` and add a line in
 `infra/base/terraform/argocd_addons.tf` to allow it to be deployed by terraform.
 
 Any infrastructure that is added should be toggleable with the default set to off. The variable should be added to
-`variables.tf` where it is overridden by the specific infrastructure that consumes it. Additionally,
-`website/docs/infra/ai-ml/index.md` should be updated to reflect the new variable that can be used.
+`infra/base/terraform/variables.tf` where it is overridden by the specific infrastructure that consumes it.
+Additionally, `website/docs/infra/ai-ml/index.md` should be updated to reflect the new variable that can be used.
 
 ## Contributing Reference Architectures
 
@@ -51,8 +51,8 @@ example, you can create a new folder in `infra/` named after the architecture yo
 terraform into the architecture folder and deploy it. Lastly, create a `terraform` subfolder with a `blueprint.tfvars`
 file. This file is used to override the default variables to enable the components you need for your architecture. It is
 important to set `name = ARCHITECTURE_NAME`, otherwise it will use the default `ai-stack`. It is also important to note
-that the `name` is used to name most resources in EKS. It should not be too long and it should not have any odd
-characters. At this point, you can use the variable names in `variables.tf` to override the default `false`, eg:
+that `name` is used to name most resources in EKS. It should not be too long, and it should not have any odd characters.
+At this point, you can use the variable names in `variables.tf` to override the default `false`, eg:
 
 ```terraform
 name                    = "my-new-architecture"
@@ -63,6 +63,31 @@ enable_argo_workflows   = true
 This will deploy everything needed for running EKS for AI along with the Kuberay operator and Argo Workflows.
 
 It is also important to add the infrastructure and its purpose to the website. This is under `website/infra/ai-ml`
+
+A reference follows:
+
+```
+ai-on-eks/
+├── infra/
+│   ├── base/
+│   │   └── terraform/
+│   │       ├── variables.tf
+│   │       ├── argocd-addons/
+│   │       └── ...
+│   │
+│   └── <your-architecture>/           # Your new contribution
+│       ├── install.sh                 # Copy from existing architecture
+│       └── terraform/
+│           └── blueprint.tfvars       # Your custom configuration
+├── blueprints/
+│   ├── training/
+│   ├── inference/
+│   └── ...
+└── website/
+    └── docs/
+        └── blueprints/
+        └── infra/
+```
 
 ## Contributing Blueprints
 
