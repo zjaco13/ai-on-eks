@@ -48,6 +48,15 @@ resource "kubernetes_storage_class" "default_gp3" {
 }
 
 #---------------------------------------------------------------
+# Karpenter Node instance role Access Entry
+#---------------------------------------------------------------
+resource "aws_eks_access_entry" "karpenter_nodes" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = module.eks_blueprints_addons.karpenter.node_iam_role_arn
+  type          = "EC2_LINUX"
+}
+
+#---------------------------------------------------------------
 # EKS Blueprints Addons
 #---------------------------------------------------------------
 module "eks_blueprints_addons" {
