@@ -2,7 +2,7 @@
   "mcpServers": {
     "weather": {
       "command": "uvx",
-      "args": ["--no-cache","--from",".","weather-mcp"]
+      "args": ["--no-cache","--from",".","--directory",".","weather-mcp"]
     }
   }
 }

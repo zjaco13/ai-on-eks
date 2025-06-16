@@ -1,17 +1,18 @@
 [project]
-name = "weather-mcp-server"
+name = "weather-agent"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "httpx>=0.28.1",
+    "strands-agents>=0.1.7",
+    "strands-agents-tools>=0.1.5",
     "mcp[cli]>=1.9.4",
-    "geopy>=2.4.1"
 ]
 
 [project.scripts]
-"weather-mcp" = "server:main"
+"weather-agent-mcp-server" = "main:main_mcp_server"
+
 
 [build-system]
 requires = ["hatchling"]
