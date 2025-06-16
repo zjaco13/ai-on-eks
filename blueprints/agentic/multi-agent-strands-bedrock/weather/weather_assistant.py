@@ -30,7 +30,7 @@ def weather_assistant(query: str) -> str:
         A helpful response addressing user query
     """
     #model_id = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
-    model_id = "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
+    model_id = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-3-7-sonnet-20250219-v1:0")
     bedrock_model = BedrockModel(model_id=model_id)
 
     response = str()
