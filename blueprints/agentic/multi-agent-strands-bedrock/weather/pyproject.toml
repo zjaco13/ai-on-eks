@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 "weather-agent-mcp-server" = "main:main_mcp_server"
+"weather-agent-interactive" = "main:main"
 
 
 [build-system]

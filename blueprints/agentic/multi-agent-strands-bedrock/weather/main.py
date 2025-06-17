@@ -7,5 +7,10 @@ def main_mcp_server():
     print("Starting Weather Agent as MCP Server")
     weather_mcp_server()
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the weather agent."""
+    print("Starting Weather Agent as Interactive Agent")
     interactive_agent()
+
+if __name__ == "__main__":
+    main()
