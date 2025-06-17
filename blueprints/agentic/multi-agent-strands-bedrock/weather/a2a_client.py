@@ -2,6 +2,7 @@ import logging
 import json
 from typing import Any
 from uuid import uuid4
+import os
 
 import httpx
 from rich.console import Console
@@ -16,8 +17,7 @@ from a2a.types import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 PUBLIC_AGENT_CARD_PATH = "/.well-known/agent.json"
-BASE_URL = "http://localhost:9000"
-
+BASE_URL = f"http://localhost:{os.getenv('A2A_PORT', '9000')}"
 
 async def main() -> None:
     # Set a longer timeout for the HTTP client

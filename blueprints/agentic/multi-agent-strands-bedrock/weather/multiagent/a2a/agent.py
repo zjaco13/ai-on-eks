@@ -18,6 +18,8 @@ from starlette.applications import Starlette
 from strands import Agent as SAAgent
 from .executor import StrandsA2AExecutor
 
+import os
+
 log = logging.getLogger(__name__)
 
 
@@ -31,7 +33,7 @@ class A2AAgent:
         name: str,
         description: str,
         host: str = "localhost",
-        port: int = 9000,
+        port: int = int(os.getenv("A2A_PORT", "9000")),
         version: str = "0.0.1",
     ):
         """Initialize an A2A-compatible agent from a Strands agent.
