@@ -1,4 +1,4 @@
-from agent import weather_assistant
+from agent import weather_assistant as agent
 from rich.markdown import Markdown
 from rich.console import Console
 
@@ -22,7 +22,7 @@ def interactive_agent():
             # response = interactive_agent(
             #     user_input,
             # )
-            response = weather_assistant(user_input)
+            response = agent(user_input)
 
             # Extract and print only the relevant content from the specialized agent's response
             #content = str(response)

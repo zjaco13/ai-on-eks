@@ -1,5 +1,5 @@
 import os
-from agent import weather_assistant
+from agent import weather_assistant as agent
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
@@ -13,7 +13,7 @@ async def weather(query: str) -> str:
     Args:
         query: The user's input
     """
-    return weather_assistant(query)
+    return agent(query)
 
 def weather_mcp_server():
     """Main entry point for the weather MCP server."""
