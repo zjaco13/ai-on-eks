@@ -1,11 +1,8 @@
 {
   "mcpServers": {
     "weather": {
-      "command": "uv",
-      "args": [
-        "run",
-        "weather.py"
-      ]
+      "command": "uvx",
+      "args": ["--no-cache","--from",".","--directory",".","weather-mcp"]
     }
   }
 }

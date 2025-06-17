@@ -47,26 +47,6 @@ Wind: {period['windSpeed']} {period['windDirection']}
 Forecast: {period['detailedForecast']}
 """
 
-@mcp.tool()
-async def get_alerts(state: str) -> str:
-    """Get weather alerts for a US state.
-
-    Args:
-        state: Two-letter US state code (e.g. CA, NY)
-    """
-    url = f"{NWS_API_BASE}/alerts/active/area/{state}"
-    data = await make_nws_request(url)
-
-    if not data or "features" not in data:
-        return "Unable to fetch alerts or no alerts found."
-
-    if not data["features"]:
-        return "No active alerts for this state."
-
-    alerts = [format_alert(feature) for feature in data["features"]]
-    return "\n---\n".join(alerts)
-
-@mcp.tool()
 async def geocode_location(location: str) -> dict:
     """Convert a location name to latitude and longitude coordinates.
 
@@ -88,17 +68,37 @@ async def geocode_location(location: str) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+@mcp.tool()
+async def get_alerts(state: str) -> str:
+    """Get weather alerts for a US state.
+
+    Args:
+        state: Two-letter US state code (e.g. CA, NY)
+    """
+    url = f"{NWS_API_BASE}/alerts/active/area/{state}"
+    data = await make_nws_request(url)
+
+    if not data or "features" not in data:
+        return "Unable to fetch alerts or no alerts found."
+
+    if not data["features"]:
+        return "No active alerts for this state."
+
+    alerts = [format_alert(feature) for feature in data["features"]]
+    return "\n---\n".join(alerts)
 
 @mcp.tool()
-async def get_forecast(latitude: float, longitude: float) -> str:
+async def get_forecast(location: str) -> str:
     """Get weather forecast for a location.
 
     Args:
-        latitude: Latitude of the location
-        longitude: Longitude of the location
+        location: Name of the location (city, address, etc.)
     """
+    latitude_longitude = await geocode_location(location)
+    if "error" in latitude_longitude:
+        return latitude_longitude["error"]
     # First get the forecast grid endpoint
-    points_url = f"{NWS_API_BASE}/points/{latitude},{longitude}"
+    points_url = f"{NWS_API_BASE}/points/{latitude_longitude['latitude']},{latitude_longitude['longitude']}"
     points_data = await make_nws_request(points_url)
 
     if not points_data:
@@ -121,6 +121,10 @@ async def get_forecast(latitude: float, longitude: float) -> str:
     return "\n---\n".join(forecasts)
 
 
-if __name__ == "__main__":
-    # Initialize and run the server
+def main():
+    """Main entry point for the weather MCP server."""
+    print("Starting weather MCP server...")
     mcp.run(transport='stdio')
+
+if __name__ == "__main__":
+    main()
