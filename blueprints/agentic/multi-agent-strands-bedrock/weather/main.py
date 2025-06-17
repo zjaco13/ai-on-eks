@@ -1,9 +1,9 @@
 import logging
 import sys
 
-from interactive import interactive_agent
-from mcp_server import weather_mcp_server
-from a2a_server import weather_a2a_server
+from agent_interactive import interactive_agent
+from agent_mcp_server import weather_mcp_server
+from agent_a2a_server import weather_a2a_server
 
 logging.basicConfig(
     level=logging.INFO,

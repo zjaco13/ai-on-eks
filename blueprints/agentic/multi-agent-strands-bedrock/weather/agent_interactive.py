@@ -1,4 +1,4 @@
-from weather_agent import weather_assistant
+from agent import weather_assistant
 from rich.markdown import Markdown
 from rich.console import Console
 

@@ -19,32 +19,32 @@ uv sync
 
 # Run interactive mode
 ```bash
-uv run interactive.py
-
-# or
-
+uv run agent_interactive.py
+```
+using uvx
+```bash
 uvx --no-cache --from . --directory . weather-agent-interactive
 ```
 
 # Run as mcp server
 ```bash
-uv run mcp_server.py
-
-# or
-
+uv run agent_mcp_server.py
+```
+using uvx
+```bash
 uvx --no-cache --from . --directory . weather-agent-mcp-server --transport streamable-http
 ```
 
 # Run as a2a server
 ```bash
-uv run a2a_server.py
-
-# or
-
+uv run agent_a2a_server.py
+```
+using uvx
+```bash
 uvx --no-cache --from . --directory . weather-agent-a2a-server
 ```
 
 # Run the a2a client
 ```bash
-uv run a2a_client.py
+uv run test_a2a_client.py
 ```

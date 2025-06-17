@@ -1,5 +1,5 @@
 import os
-from weather_agent import weather_assistant
+from agent import weather_assistant
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
