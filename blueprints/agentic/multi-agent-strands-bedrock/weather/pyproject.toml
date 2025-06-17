@@ -3,16 +3,21 @@ name = "weather-agent"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
+# mitigate https://github.com/strands-agents/sdk-python/commit/5fab010715fa26bc2bd68505367dbb7c09e0e3ed
 dependencies = [
-    "strands-agents>=0.1.7",
-    "strands-agents-tools>=0.1.5",
+    "a2a-sdk>=0.2.8",
     "mcp[cli]>=1.9.4",
+    "strands-agents @ git+https://github.com/strands-agents/sdk-python.git@main",
+    "strands-agents-tools @ git+https://github.com/strands-agents/tools.git@main",
+    "markdown",
+    "rich"
 ]
 
 [project.scripts]
-"weather-agent-mcp-server" = "main:main_mcp_server"
-"weather-agent-interactive" = "main:main"
+"weather-agent-mcp-server"  = "main:main_mcp_server"
+"weather-agent-a2a-server"  = "main:main_a2a_server"
+"weather-agent-interactive" = "main:main_interactive"
 
 
 [build-system]
@@ -21,3 +26,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
+
+[tool.hatch.metadata]
+allow-direct-references = true

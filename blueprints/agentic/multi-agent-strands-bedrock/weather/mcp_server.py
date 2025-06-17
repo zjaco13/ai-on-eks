@@ -1,5 +1,5 @@
 import os
-from weather_assistant import weather_assistant
+from weather_agent import weather_assistant
 from mcp.server.fastmcp import FastMCP
 
 # Initialize FastMCP server
@@ -30,7 +30,7 @@ def weather_mcp_server():
     args = parser.parse_args()
 
     # Run MCP server with specified transport
-    mcp.settings.port = os.getenv("MCP_PORT", 8080)
+    mcp.settings.port = int(os.getenv("MCP_PORT", "8080"))
     mcp.settings.host = '0.0.0.0'
     mcp.run(transport=args.transport)
 

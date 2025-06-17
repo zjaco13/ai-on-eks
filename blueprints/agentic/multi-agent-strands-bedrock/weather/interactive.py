@@ -1,11 +1,13 @@
-from weather_assistant import weather_assistant
+from weather_agent import weather_assistant
+from rich.markdown import Markdown
+from rich.console import Console
 
 def interactive_agent():
     print("\n📁 Weather Agent\n")
     print("Ask a question about the weather forecast or alerts.\n\n")
 
     print("You can try following queries:")
-    print("- What's the weather in Orlando, Florida?")
+    print("- What's the weather in Orlando, Florida this week?")
     print("- Any weather alerts for Las Vegas today?")
     print("Type 'exit' to quit.")
 
@@ -23,8 +25,12 @@ def interactive_agent():
             response = weather_assistant(user_input)
 
             # Extract and print only the relevant content from the specialized agent's response
-            content = str(response)
-            print(content)
+            #content = str(response)
+            #print(content)
+            print("\n\n=== RENDERED MARKDOWN ===\n")
+            console = Console()
+            console.print(Markdown(response))
+            print("\n=== END OF MARKDOWN ===\n")
 
         except KeyboardInterrupt:
             print("\n\nExecution interrupted. Exiting...")
@@ -32,3 +38,6 @@ def interactive_agent():
         except Exception as e:
             print(f"\nAn error occurred: {str(e)}")
             print("Please try asking a different question.")
+
+if __name__ == "__main__":
+    interactive_agent()
