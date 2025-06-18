@@ -1,361 +1,299 @@
-import json
-import datetime
-from boto3 import Session
 from strands import Agent, tool
+import logging
+import json
+from typing import Any, List, Dict
+from uuid import uuid4
+import os
+import asyncio
+
+import httpx
+from rich.console import Console
+from a2a.client import A2ACardResolver, A2AClient
+from a2a.types import (
+    AgentCard,
+    MessageSendParams,
+    SendMessageRequest,
+)
 from strands.models import BedrockModel
+from strands.types.tools import ToolUse, ToolResult
+WEATHER_TOOL_SPEC = {
+    "name": "get_weather",
+    "description": "Get detailed weather information for a specific location and time period",
+    "inputSchema": {
+        "json": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Detailed weather query including location, time period, and specific weather attributes needed"
+                }
+            },
+            "required": ["query"]
+        }
+    }
+}
 
-sess = Session()
+PROMPT ="""You are a Travel Orchestration Agent designed to create comprehensive travel plans by coordinating with specialized agents. Your primary function is to delegate specific information requests to the appropriate specialized agents and NEVER generate this specialized information yourself.
 
-class TravelPlannerAgent():
-    """
-    An orchestration agent that coordinates between a weather agent and an itinerary agent
-    to create weather-optimized travel plans.
-    """
+CORE PRINCIPLES:
+1. NEVER invent or fabricate specialized information that should come from other agents
+2. ALWAYS use the appropriate tool to query specialized agents for their domain expertise
+3. Be extremely clear and specific when formulating requests to other agents
+4. Clearly attribute information in your responses to the appropriate specialized agent
 
-    def __init__(self):
+WEATHER INFORMATION PROTOCOL:
+When ANY weather-related information is needed, you MUST:
+1. Use ONLY the get_weather tool to obtain this information
+2. NEVER attempt to predict, estimate, or generate weather information yourself
+3. Formulate weather queries with extreme specificity:
+   - Include precise location (city, region, country)
+   - Specify exact time period (dates, season, month)
+   - Request specific weather attributes (temperature, precipitation, conditions)
+   - Example: "What will the weather be like in Paris, France from June 15-20, 2025? Please provide daily temperature ranges, precipitation chances, and general conditions."
+4. Wait for the weather agent's response before proceeding with travel recommendations
+5. Clearly attribute all weather information in your final response: "According to the Weather Agent, Paris will experience..."
 
-        SYSTEM_INSTRUCTION = f"""
-            You are a specialized assistant for travel planning. 
-            Your sole purpose is to use the  tool to answer questions about conversions. 
-            If the user asks about anything other than mathematical conversions,
-            politely state that you cannot help with that topic and can only assist with math conversion-related queries. 
-            Do not attempt to answer unrelated questions or use tools for other purposes.
-            Set response status to input_required if the user needs to provide more information.
-            Set response status to error if there is an error while processing the request.
-            Set response status to completed if the request is complete.
-        """
-        self.model = BedrockModel(
-            model_id='us.anthropic.claude-3-7-sonnet-20250219-v1:0',
-            boto_session=sess,
-            temperature=0.01,
-        )
-        self.agent = Agent(
-            system_prompt=SYSTEM_INSTRUCTION, model=self.model, tools=[calculator]
-        )
+QUERY FORMULATION GUIDELINES:
+1. Location Specificity:
+   - Always include full city name AND country
+   - Add region/state for clarity when needed
+   - Use official location names, not colloquial ones
+   - Example: "Kyoto, Japan" not just "Kyoto"
 
-    def invoke(self, query, context) -> str:
-        return self.get_agent_response(query)
+2. Temporal Precision:
+   - Specify exact dates when available (YYYY-MM-DD format)
+   - Otherwise, use precise season and year
+   - For general queries, specify "typical weather" for a specific month/season
+   - Example: "August 10-15, 2025" or "typical weather in early August"
 
-    def get_agent_response(self, query):
-        result = self.agent(query)
-        response_text = result.message["content"][0]["text"]
-        
-        # Extract JSON from between <json_out> tags
-        json_pattern = r'<json_out>(.*?)</json_out>'
-        json_match = re.search(json_pattern, response_text, re.DOTALL)
-        
-        if json_match:
-            json_content = json_match.group(1).strip()
+3. Information Detail:
+   - Request specific weather attributes (temperature ranges, precipitation probability, humidity levels, UV index, etc.)
+   - Ask about weather patterns relevant to planned activities
+   - Request time-of-day variations when relevant (morning fog, afternoon thunderstorms)
+   - Example: "Please provide daily high and low temperatures, precipitation chances, and any weather warnings or patterns that might affect outdoor activities."
+
+RESPONSE FORMATTING:
+1. Always structure your final travel plans with clear sections
+2. Explicitly attribute ALL weather information to the Weather Agent
+3. Use phrases like:
+   - "According to the Weather Agent..."
+   - "The Weather Agent reports that..."
+   - "Based on information from the Weather Agent..."
+4. Never blend agent-provided information with your own suggestions without clear attribution
+5. If the Weather Agent provides incomplete information, request additional details rather than filling gaps yourself
+
+ERROR HANDLING:
+1. If the Weather Agent returns an error or incomplete information:
+   - Acknowledge the limitation
+   - Do NOT substitute with your own weather predictions
+   - Suggest the traveler check weather closer to their trip
+   - Example: "The Weather Agent was unable to provide complete weather information for Bali in December. I recommend checking the forecast closer to your travel date."
+
+2. If a location is not found:
+   - Check for alternative spellings or nearby locations
+   - Ask the user for clarification
+   - Do NOT provide weather information for that location
+
+EXAMPLES OF PROPER TOOL USAGE:
+
+CORRECT:
+User: "I'm planning a trip to Barcelona in July."
+You: [Using get_weather tool] "What is the typical weather in Barcelona, Spain during July? Please provide temperature ranges, precipitation chances, humidity levels, and any common weather patterns that might affect tourism."
+
+INCORRECT:
+User: "I'm planning a trip to Barcelona in July."
+You: "Barcelona is typically hot and sunny in July with temperatures around 80-90°F."
+
+Remember: Your value comes from coordinating specialized information from expert agents, not from generating this information yourself. Always prioritize accuracy through proper tool usage over generating information independently."""
+
+# def tools: IF A2A, a2a tools, if mcp, mcp tools
+    
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Global variables
+PUBLIC_AGENT_CARD_PATH = "/.well-known/agent.json"
+WEATHER_URL = f"http://localhost:{os.getenv('WEATHER_A2A_PORT', '9000')}"
+remote_connections: Dict[str, A2AClient] = {}
+cards: Dict[str, AgentCard] = {}
+agents_info: str = ""
+
+# Initialize agents
+async def init_agents(agent_addresses: List[str]):
+    global remote_connections, cards, agents_info
+
+    logger.info(f"Initializing connections to {len(agent_addresses)} agents")
+    timeout = httpx.Timeout(60.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        for address in agent_addresses:
+            logger.info(f"Attempting to connect to agent at: {address}")
+            resolver = A2ACardResolver(client, address)
             try:
-                response_data = json.loads(json_content)
-                structured_response = ResponseFormat(**response_data)
-            except (json.JSONDecodeError, ValidationError) as e:
-                print(f"Parsing error: {e}")
-                structured_response = ResponseFormat(
-                    status="error", message="Unable to process response format"
-                )
-        else:
-            print("No <json_out> tags found in response")
-            structured_response = ResponseFormat(
-                status="error", message="No JSON output tags found in response"
-            )
+                logger.debug(f"Fetching agent card from {address}")
+                card = await resolver.get_agent_card()
+                logger.info(f"Successfully retrieved agent card for: {card.name}")
+                logger.debug(f"Agent card details: {card.model_dump_json(exclude_none=True)}")
 
-        # Use the structured_response instead of undefined current_state
-        if structured_response.status == "input_required":
-            return {
-                "is_task_complete": False,
-                "require_user_input": True,
-                "content": structured_response.message,
-            }
-        if structured_response.status == "error":
-            return {
-                "is_task_complete": False,
-                "require_user_input": True,
-                "content": structured_response.message,
-            }
-        if structured_response.status == "completed":
-            return {
-                "is_task_complete": True,
-                "require_user_input": False,
-                "content": structured_response.message,
-            }
+                remote_connections[card.name] = A2AClient(client, card, address)
+                cards[card.name] = card
+                logger.info(f"Successfully established connection to agent: {card.name}")
 
-        return {
-            "is_task_complete": False,
-            "require_user_input": True,
-            "content": "We are unable to process your request at the moment. Please try again.",
-        }
+            except httpx.ConnectError as e:
+                logger.error(f"Connection error when connecting to {address}: {e}")
+                print(f"Error: Failed to get Agent Card from {address}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error when initializing connection to {address}: {e}", exc_info=True)
+                print(f"Error: Failed to initialize connection for {address}: {e}")
 
-    SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]
+    agent_info = [
+        json.dumps({"name": card.name, "description": card.description}) for card in cards.values()
+    ]
+    agents_info = "\n".join(agent_info) if agent_info else "No agents found"
 
-    def register_tools(self):
-        """Register the tools this agent can use."""
+    if agent_info:
+        logger.info(f"Successfully connected to {len(agent_info)} agents")
+        for agent_data in agent_info:
+            logger.info(f"Connected agent: {agent_data}")
+    else:
+        logger.warning("No agents were successfully connected")
 
-        @tool
-        def get_weather_forecast(location: str, start_date: str, end_date: str) -> Dict[str, Any]:
-            """
-            Get weather forecast for a location during a specific date range by communicating with the WeatherAgent.
-            """
-            # Create a message to send to the WeatherAgent
-            message = Message(
-                content=f"Get weather forecast for {location} from {start_date} to {end_date}",
-                metadata={
-                    "location": location,
-                    "start_date": start_date,
-                    "end_date": end_date
-                }
-            )
+@tool
+async def get_weather(task: str) -> str:
+    """Send a message to another AI Agent that can query the Weather API for accurate information asking for specific weather information for the location given by the user
 
-            # Send message to WeatherAgent using A2A communication
-            response = self.send_message_to_agent("WeatherAgent", message)
+    Args:
+        task: The message to send to the Weather AI Agent
+    Returns:
+        A helpful response addressing the query from the agent
+    """
+    try:
+        result = await send_message("Weather Agent", task)
+        logger.info("Weather information successfully retrieved")
+        return result
+    except Exception as e:
+        logger.error(f"Error getting weather information: {e}", exc_info=True)
+        return f"Error retrieving weather information: {str(e)}"
 
-            # Parse and return the weather data
-            return json.loads(response.content)
+async def send_message(agent_name: str, task: str):
+    """Send a task to another agent"""
+    logger.info(f"Sending message to agent '{agent_name}': '{task[:50]}...'")
 
-        @tool
-        def get_location_itinerary(location: str, interests: List[str], duration_days: int) -> Dict[str, Any]:
-            """
-            Get an itinerary for a location based on interests by communicating with the ItineraryAgent.
-            """
-            # Create a message to send to the ItineraryAgent
-            message = Message(
-                content=f"Create an itinerary for {location} focused on {', '.join(interests)} for {duration_days} days",
-                metadata={
-                    "location": location,
-                    "interests": interests,
-                    "duration_days": duration_days
-                }
-            )
+    if agent_name not in remote_connections:
+        logger.error(f"Agent '{agent_name}' not found in remote connections")
+        raise ValueError(f"Agent {agent_name} not found")
 
-            # Send message to ItineraryAgent using A2A communication
-            response = self.send_message_to_agent("ItineraryAgent", message)
+    client = remote_connections[agent_name]
+    if not client:
+        logger.error(f"Client not available for agent '{agent_name}'")
+        raise ValueError(f"Client not available for agent {agent_name}")
 
-            # Parse and return the itinerary data
-            return json.loads(response.content)
+    id = str(uuid4())
+    logger.debug(f"Generated message ID: {id}")
 
-        @tool
-        def create_weather_optimized_plan(location: str, start_date: str, duration_days: int, interests: List[str]) -> Dict[str, Any]:
-            """
-            Create a travel plan optimized for weather conditions.
-            """
-            # Calculate end date
-            start = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-            end = start + datetime.timedelta(days=duration_days-1)
-            end_date = end.strftime("%Y-%m-%d")
+    payload = {
+        "message": {
+            "role": "user",
+            "parts": [{"kind": "text", "text": task}],
+            "messageId": id,
+        },
+    }
 
-            # Get weather forecast
-            weather_data = self.get_weather_forecast(location, start_date, end_date)
+    message = SendMessageRequest(id=id, params=MessageSendParams.model_validate(payload))
 
-            # Get basic itinerary
-            itinerary_data = self.get_location_itinerary(location, interests, duration_days)
+    logger.debug(f"Sending request to {agent_name}")
+    try:
+        response = await client.send_message(message)
+        logger.info(f"Received response from {agent_name}")
 
-            # Optimize itinerary based on weather
-            optimized_plan = self._optimize_itinerary_for_weather(weather_data, itinerary_data)
+        # Process and return the response
+        response_dict = json.loads(response.model_dump_json())
+        logger.debug(f"Response structure: {list(response_dict.keys())}")
 
-            return optimized_plan
+        # Extract text from response
+        if "result" in response_dict and "parts" in response_dict["result"]:
+            for part in response_dict["result"]["parts"]:
+                if part.get("kind") == "text" and "text" in part:
+                    text_content = part["text"]
+                    logger.info(f"Successfully extracted text content from {agent_name} response")
+                    logger.debug(f"Text content (truncated): {text_content[:100]}..." if len(text_content) > 100 else text_content)
+                    return text_content
 
-    def _optimize_itinerary_for_weather(self, weather_data: Dict[str, Any], itinerary_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Optimize an itinerary based on weather conditions.
-        """
-        optimized_plan = {
-            "location": itinerary_data["location"],
-            "duration_days": itinerary_data["duration_days"],
-            "weather_summary": self._generate_weather_summary(weather_data),
-            "daily_plan": [],
-            "recommendations": []
-        }
+        logger.warning(f"No text content found in response from {agent_name}")
+        return "No response received from weather agent"
+    except Exception as e:
+        logger.error(f"Error sending message to {agent_name}: {e}", exc_info=True)
+        raise
 
-        # Extract activities from itinerary
-        all_activities = []
-        for day in itinerary_data["daily_plan"]:
-            all_activities.extend(day["activities"])
+def get_agent() -> Agent:
+    logger.info("Creating travel agent with Bedrock model")
+    model_id = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-3-7-sonnet-20250219-v1:0")
+    logger.info(f"Using Bedrock model: {model_id}")
 
-        # Categorize activities as indoor or outdoor
-        indoor_activities = [a for a in all_activities if a.get("type") == "indoor"]
-        outdoor_activities = [a for a in all_activities if a.get("type") == "outdoor"]
-        other_activities = [a for a in all_activities if a.get("type") not in ["indoor", "outdoor"]]
+    try:
+        bedrock_model = BedrockModel(model_id=model_id)
+        logger.info("Successfully initialized Bedrock model")
 
-        # Sort days by weather quality (best to worst)
-        weather_days = weather_data["daily"]
-        weather_quality = []
+        travel_agent = Agent(
+            model=bedrock_model,
+            system_prompt=PROMPT,
+            tools=[get_weather]
+        )
+        logger.info("Travel agent successfully created with system prompt and weather tool")
+        return travel_agent
+    except Exception as e:
+        logger.error(f"Error creating travel agent: {e}", exc_info=True)
+        raise
 
-        for i, day in enumerate(weather_days):
-            # Calculate a weather score (higher is better weather)
-            score = 100
-            if "rain" in day["description"].lower():
-                score -= 50
-            if "storm" in day["description"].lower():
-                score -= 70
-            if "snow" in day["description"].lower():
-                score -= 40
-            if "cloud" in day["description"].lower():
-                score -= 20
+async def setup():
+    # Initialize connections to agents
+    await init_agents([WEATHER_URL])
 
-            # Adjust for temperature (assume ideal is around 75°F/24°C)
-            temp = day["temperature"]["average"]
-            temp_diff = abs(temp - 75)
-            score -= temp_diff
+async def main():
+    logger.info("Starting Travel Planning Assistant")
 
-            weather_quality.append({"day_index": i, "score": score, "weather": day})
+    try:
+        # Initialize connections
+        await setup()
 
-        # Sort days by weather quality
-        weather_quality.sort(key=lambda x: x["score"], reverse=True)
+        # Get the agent
+        logger.info("Creating travel agent")
+        agent = get_agent()
+        logger.info("Travel agent created successfully")
 
-        # Assign activities to days based on weather
-        days_plan = []
-        for _ in range(len(weather_days)):
-            days_plan.append({"activities": []})
+        # Interactive session
+        console = Console()
+        console.print("[bold green]Travel Planning Assistant[/bold green]")
+        console.print("Ask about travel plans, weather, etc. Type 'exit' to quit.")
+        logger.info("Starting interactive session")
 
-        # Assign outdoor activities to best weather days
-        outdoor_index = 0
-        for day_info in weather_quality:
-            day_index = day_info["day_index"]
+        while True:
+            user_input = input("\nYou: ")
+            if user_input.lower() in ["exit", "quit"]:
+                logger.info("User requested to exit")
+                break
 
-            if outdoor_index < len(outdoor_activities):
-                days_plan[day_index]["activities"].append(outdoor_activities[outdoor_index])
-                outdoor_index += 1
+            # Process the user input with the agent
+            logger.info(f"Processing user input: '{user_input}'")
+            try:
+                response = agent(user_input)
+                logger.info("Successfully generated response")
+                console.print(f"\n[bold blue]Assistant:[/bold blue] {response}")
+            except Exception as e:
+                logger.error(f"Error generating response: {e}", exc_info=True)
+                console.print(f"\n[bold red]Error:[/bold red] Failed to generate response: {str(e)}")
 
-        # Fill remaining days with indoor and other activities
-        activity_index = 0
-        combined_activities = indoor_activities + other_activities
+        logger.info("Interactive session ended")
+    except Exception as e:
+        logger.error(f"Error in main function: {e}", exc_info=True)
+        print(f"Error: {str(e)}")
 
-        for day_index in range(len(days_plan)):
-            # Add 2-3 activities per day
-            while len(days_plan[day_index]["activities"]) < 3 and activity_index < len(combined_activities):
-                days_plan[day_index]["activities"].append(combined_activities[activity_index])
-                activity_index += 1
-
-        # Format the daily plan with weather information
-        for day_index, day_plan in enumerate(days_plan):
-            day_weather = weather_days[day_index]
-            date = datetime.datetime.strptime(day_weather["date"], "%Y-%m-%d")
-
-            optimized_plan["daily_plan"].append({
-                "day": day_index + 1,
-                "date": day_weather["date"],
-                "day_of_week": date.strftime("%A"),
-                "weather": {
-                    "description": day_weather["description"],
-                    "temperature": day_weather["temperature"],
-                    "precipitation_chance": day_weather.get("precipitation_chance", 0)
-                },
-                "activities": day_plan["activities"],
-                "weather_notes": self._generate_weather_notes(day_weather)
-            })
-
-        # Add overall recommendations
-        optimized_plan["recommendations"] = self._generate_recommendations(weather_data, itinerary_data)
-
-        return optimized_plan
-
-    def _generate_weather_summary(self, weather_data: Dict[str, Any]) -> str:
-        """Generate a summary of the weather for the trip duration."""
-        conditions = [day["description"] for day in weather_data["daily"]]
-        temps = [day["temperature"]["average"] for day in weather_data["daily"]]
-
-        avg_temp = sum(temps) / len(temps)
-        condition_counts = {}
-        for condition in conditions:
-            condition_counts[condition] = condition_counts.get(condition, 0) + 1
-
-        most_common = max(condition_counts.items(), key=lambda x: x[1])
-
-        return f"Average temperature will be {avg_temp:.1f}°F with mostly {most_common[0].lower()} conditions."
-
-    def _generate_weather_notes(self, day_weather: Dict[str, Any]) -> str:
-        """Generate weather-specific notes for a day."""
-        notes = []
-        desc = day_weather["description"].lower()
-        temp = day_weather["temperature"]["average"]
-
-        if "rain" in desc or "shower" in desc:
-            notes.append("Bring an umbrella and waterproof clothing.")
-        if "snow" in desc:
-            notes.append("Dress warmly with waterproof boots.")
-        if temp > 85:
-            notes.append("Stay hydrated and use sun protection.")
-        if temp < 50:
-            notes.append("Dress in warm layers.")
-
-        return " ".join(notes) if notes else "Weather conditions are favorable."
-
-    def _generate_recommendations(self, weather_data: Dict[str, Any], itinerary_data: Dict[str, Any]) -> List[str]:
-        """Generate overall recommendations based on weather and itinerary."""
-        recommendations = []
-
-        # Check for extreme weather
-        has_rain = any("rain" in day["description"].lower() for day in weather_data["daily"])
-        has_extreme_heat = any(day["temperature"]["high"] > 90 for day in weather_data["daily"])
-        has_extreme_cold = any(day["temperature"]["low"] < 32 for day in weather_data["daily"])
-
-        if has_rain:
-            recommendations.append("Pack waterproof clothing and an umbrella.")
-        if has_extreme_heat:
-            recommendations.append("Bring lightweight clothing, sun protection, and stay hydrated.")
-        if has_extreme_cold:
-            recommendations.append("Pack warm clothing, gloves, and a hat.")
-
-        # Add activity-based recommendations
-        all_activities = []
-        for day in itinerary_data["daily_plan"]:
-            all_activities.extend(day["activities"])
-
-        activity_types = set(a.get("category", "") for a in all_activities)
-
-        if "hiking" in activity_types:
-            recommendations.append("Bring comfortable hiking shoes and appropriate outdoor gear.")
-        if "beach" in activity_types:
-            recommendations.append("Don't forget swimwear and beach essentials.")
-        if "museum" in activity_types:
-            recommendations.append("Check museum hours and consider booking tickets in advance.")
-
-        return recommendations
-
-    def process_message(self, message: Message) -> Message:
-        """
-        Process incoming messages and generate travel plans.
-        """
-        try:
-            # Extract request details from the message
-            content = message.content
-            metadata = message.metadata or {}
-
-            location = metadata.get("location", "")
-            start_date = metadata.get("start_date", "")
-            duration_days = metadata.get("duration_days", 3)
-            interests = metadata.get("interests", ["sightseeing", "food", "culture"])
-
-            # Create a weather-optimized travel plan
-            travel_plan = self.create_weather_optimized_plan(
-                location=location,
-                start_date=start_date,
-                duration_days=duration_days,
-                interests=interests
-            )
-
-            # Format the response
-            response_content = json.dumps(travel_plan, indent=2)
-
-            return Message(
-                content=f"Here's your weather-optimized travel plan for {location}:\n\n{response_content}",
-                metadata={"travel_plan": travel_plan}
-            )
-
-        except Exception as e:
-            return Message(
-                content=f"Error creating travel plan: {str(e)}",
-                metadata={"error": str(e)}
-            )
-    def send_message_to_agent(self, agent_name: str, message: Message) -> Message:
-        """
-        Send a message to another agent.
-        """
-        # Find the agent in the list of agents
-        agent = next((a for a in self.agents if a.name == agent_name), None)
-
-        if agent is None:
-            raise ValueError(f"Agent '{agent_name}' not found")
-
-        # Send the message to the agent
-        return agent.process_message(message)
+if __name__ == "__main__":
+    logger.info("Application starting")
+    # Run the main function
+    try:
+        asyncio.run(main())
+        logger.info("Application completed successfully")
+    except Exception as e:
+        logger.critical(f"Unhandled exception in main application: {e}", exc_info=True)
+        print(f"Critical error: {str(e)}")
