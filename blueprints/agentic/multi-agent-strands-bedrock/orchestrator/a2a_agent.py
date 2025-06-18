@@ -118,33 +118,38 @@ WEATHER_URL = f"http://localhost:{os.getenv('WEATHER_A2A_PORT', '9000')}"
 remote_connections: Dict[str, A2AClient] = {}
 cards: Dict[str, AgentCard] = {}
 agents_info: str = ""
+# Global HTTP client that stays open
+http_client = None
 
 # Initialize agents
 async def init_agents(agent_addresses: List[str]):
-    global remote_connections, cards, agents_info
+    global remote_connections, cards, agents_info, http_client
 
     logger.info(f"Initializing connections to {len(agent_addresses)} agents")
+
+    # Create a persistent HTTP client
     timeout = httpx.Timeout(60.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        for address in agent_addresses:
-            logger.info(f"Attempting to connect to agent at: {address}")
-            resolver = A2ACardResolver(client, address)
-            try:
-                logger.debug(f"Fetching agent card from {address}")
-                card = await resolver.get_agent_card()
-                logger.info(f"Successfully retrieved agent card for: {card.name}")
-                logger.debug(f"Agent card details: {card.model_dump_json(exclude_none=True)}")
+    http_client = httpx.AsyncClient(timeout=timeout)
 
-                remote_connections[card.name] = A2AClient(client, card, address)
-                cards[card.name] = card
-                logger.info(f"Successfully established connection to agent: {card.name}")
+    for address in agent_addresses:
+        logger.info(f"Attempting to connect to agent at: {address}")
+        resolver = A2ACardResolver(http_client, address)
+        try:
+            logger.debug(f"Fetching agent card from {address}")
+            card = await resolver.get_agent_card()
+            logger.info(f"Successfully retrieved agent card for: {card.name}")
 
-            except httpx.ConnectError as e:
-                logger.error(f"Connection error when connecting to {address}: {e}")
-                print(f"Error: Failed to get Agent Card from {address}: {e}")
-            except Exception as e:
-                logger.error(f"Unexpected error when initializing connection to {address}: {e}", exc_info=True)
-                print(f"Error: Failed to initialize connection for {address}: {e}")
+            # Create A2A client with the persistent HTTP client
+            remote_connections[card.name] = A2AClient(http_client, card, address)
+            cards[card.name] = card
+            logger.info(f"Successfully established connection to agent: {card.name}")
+
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error when connecting to {address}: {e}")
+            print(f"Error: Failed to get Agent Card from {address}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error when initializing connection to {address}: {e}", exc_info=True)
+            print(f"Error: Failed to initialize connection for {address}: {e}")
 
     agent_info = [
         json.dumps({"name": card.name, "description": card.description}) for card in cards.values()
@@ -159,7 +164,7 @@ async def init_agents(agent_addresses: List[str]):
         logger.warning("No agents were successfully connected")
 
 @tool
-async def get_weather(task: str) -> str:
+def get_weather(task: str) -> str:
     """Send a message to another AI Agent that can query the Weather API for accurate information asking for specific weather information for the location given by the user
 
     Args:
@@ -168,7 +173,9 @@ async def get_weather(task: str) -> str:
         A helpful response addressing the query from the agent
     """
     try:
-        result = await send_message("Weather Agent", task)
+        # Use the current event loop with nest_asyncio
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(send_message("Weather Agent", task))
         logger.info("Weather information successfully retrieved")
         return result
     except Exception as e:
@@ -245,16 +252,12 @@ def get_agent() -> Agent:
         logger.error(f"Error creating travel agent: {e}", exc_info=True)
         raise
 
-async def setup():
-    # Initialize connections to agents
-    await init_agents([WEATHER_URL])
-
-async def main():
+async def async_main():
     logger.info("Starting Travel Planning Assistant")
 
     try:
         # Initialize connections
-        await setup()
+        await init_agents([WEATHER_URL])
 
         # Get the agent
         logger.info("Creating travel agent")
@@ -287,13 +290,22 @@ async def main():
     except Exception as e:
         logger.error(f"Error in main function: {e}", exc_info=True)
         print(f"Error: {str(e)}")
+    finally:
+        # Clean up the HTTP client
+        if http_client:
+            await http_client.aclose()
+            logger.info("HTTP client closed")
 
-if __name__ == "__main__":
+def main():
     logger.info("Application starting")
-    # Run the main function
+    # Run the async main function
     try:
-        asyncio.run(main())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(async_main())
         logger.info("Application completed successfully")
     except Exception as e:
         logger.critical(f"Unhandled exception in main application: {e}", exc_info=True)
         print(f"Critical error: {str(e)}")
+
+if __name__ == "__main__":
+    main()
