@@ -93,173 +93,14 @@ You: "Barcelona is typically hot and sunny in July with temperatures around 80-9
 
 Remember: Your value comes from coordinating specialized information from expert agents, not from generating this information yourself. Always prioritize accuracy through proper tool usage over generating information independently."""
 
-weather_client = MCPClient(lambda: streamablehttp_client(WEATHER_URL))
-
-# Initialize MCP clients
-def init_mcp_clients():
-    global mcp_clients
-
-    logger.info("Initializing MCP clients")
-
-    # Create Weather MCP client
-    try:
-        weather_client = MCPClient(lambda: streamablehttp_client(WEATHER_URL))
-        mcp_clients["Weather"] = weather_client
-        logger.info(f"Successfully created MCP client for Weather at {WEATHER_URL}")
-    except Exception as e:
-        logger.error(f"Error creating MCP client for Weather: {e}", exc_info=True)
-        print(f"Error: Failed to create MCP client for Weather: {e}")
-
-    # Add more MCP clients as needed
-
-    if mcp_clients:
-        logger.info(f"Successfully initialized {len(mcp_clients)} MCP clients")
-    else:
-        logger.warning("No MCP clients were successfully initialized")
-
 # Get available tools from MCP servers
-def get_available_tools():
-    tools_info = {}
-
-    for name, client in mcp_clients.items():
-        try:
-            tools = client.list_tools_sync()
-            tools_info[name] = [tool.tool_name for tool in tools]
-            logger.info(f"Available tools from {name}: {tools_info[name]}")
-        except Exception as e:
-            logger.error(f"Error getting tools from {name}: {e}", exc_info=True)
-
-    return tools_info
-
-def parse_mcp_response(response):
-    """Parse response from MCP tool call"""
-    try:
-        # If response is already a string, return it directly
-        if isinstance(response, str):
-            return response
-
-        # If response is a dictionary, try to extract text content
-        if isinstance(response, dict):
-            # Check for common response patterns
-            if "result" in response:
-                result = response["result"]
-                # Handle string result
-                if isinstance(result, str):
-                    return result
-                # Handle dictionary result
-                elif isinstance(result, dict):
-                    if "text" in result:
-                        return result["text"]
-                    elif "content" in result:
-                        return result["content"]
-                    elif "message" in result:
-                        return result["message"]
-
-            # Check for content directly in response
-            if "text" in response:
-                return response["text"]
-            elif "content" in response:
-                return response["content"]
-            elif "message" in response:
-                return response["message"]
-
-        # If response is JSON string, parse it and try again
-        if isinstance(response, str) and (response.startswith('{') or response.startswith('[')):
-            try:
-                parsed = json.loads(response)
-                return parse_mcp_response(parsed)
-            except json.JSONDecodeError:
-                pass
-
-        # If we can't parse it in a structured way, convert to string
-        return str(response)
-    except Exception as e:
-        logger.error(f"Error parsing MCP response: {e}", exc_info=True)
-        return f"Error parsing response: {str(e)}"
-
-@tool
-def get_weather(task: str) -> str:
-    """Send a message to the Weather MCP server to get accurate weather information
-
-    Args:
-        task: The weather query including location, time period, and specific weather attributes needed
-    Returns:
-        Weather information from the Weather MCP server
-    """
-    with weather_client as client:
-        tools = client.list_tools_sync()
-
-        # Look for a tool that can handle weather queries
-        weather_tool = None
-        for tool in tools:
-            if "weather" in tool.tool_name.lower() or "forecast" in tool.tool_name.lower():
-                weather_tool = tool.tool_name
-                break
-
-        if not weather_tool:
-            logger.warning("No suitable weather tool found in Weather MCP server")
-            weather_tool = tools[0].tool_name if tools else None
-
-        if not weather_tool:
-            return "Error: No tools available in the Weather service"
-
-        logger.info(f"Using tool '{weather_tool}' to get weather information")
-
-        raw_result = client.call_tool_sync(weather_tool, task)
-        logger.info("Weather information successfully retrieved")
-        logger.info(f"Raw result: {raw_result}")
-
-        # Parse the response to extract text content
-        result = parse_mcp_response(raw_result)
-        logger.info("Successfully parsed weather information")
-        logger.info(f"Parsed result (truncated): {result[:100]}..." if len(result) > 100 else result)
-
-        return result
-
-    try:
-        if "Weather" not in mcp_clients:
-            logger.error("Weather MCP client not available")
-            return "Error: Weather service is not available"
-
-        # Find the appropriate tool in the Weather MCP server
-        client = mcp_clients["Weather"]
-        tools = client.list_tools_sync()
-
-        # Look for a tool that can handle weather queries
-        weather_tool = None
-        for tool in tools:
-            if "weather" in tool.tool_name.lower() or "forecast" in tool.tool_name.lower():
-                weather_tool = tool.tool_name
-                break
-
-        if not weather_tool:
-            logger.warning("No suitable weather tool found in Weather MCP server")
-            weather_tool = tools[0].tool_name if tools else None
-
-        if not weather_tool:
-            return "Error: No tools available in the Weather service"
-
-        logger.info(f"Using tool '{weather_tool}' to get weather information")
-
-        raw_result = client.call_tool_sync(weather_tool, task)
-        logger.info("Weather information successfully retrieved")
-        logger.debug(f"Raw result: {raw_result}")
-
-        # Parse the response to extract text content
-        result = parse_mcp_response(raw_result)
-        logger.info("Successfully parsed weather information")
-        logger.debug(f"Parsed result (truncated): {result[:100]}..." if len(result) > 100 else result)
-
-        return result
-    except Exception as e:
-        logger.error(f"Error getting weather information: {e}", exc_info=True)
-        return f"Error retrieving weather information: {str(e)}"
 
 def get_agent() -> Agent:
     logger.info("Creating travel agent with Bedrock model")
     model_id = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-3-7-sonnet-20250219-v1:0")
     logger.info(f"Using Bedrock model: {model_id}")
 
+    mcp_clients["Weather"] = MCPClient(lambda url=WEATHER_URL: streamablehttp_client(url))
     try:
         bedrock_model = BedrockModel(model_id=model_id)
         logger.info("Successfully initialized Bedrock model")
@@ -267,8 +108,12 @@ def get_agent() -> Agent:
         travel_agent = Agent(
             model=bedrock_model,
             system_prompt=PROMPT,
-            tools=[get_weather]
         )
+        with mcp_clients["Weather"] as weather_client:
+            weather_tools = weather_client.list_tools_sync()
+            logger.info(f"tools: {weather_tools}")
+            travel_agent.tool_registry.process_tools(weather_tools)
+
         logger.info("Travel agent successfully created with system prompt and weather tool")
         return travel_agent
     except Exception as e:
@@ -279,13 +124,6 @@ def main():
     logger.info("Starting Travel Planning Assistant")
 
     try:
-        # Initialize MCP clients
-        #init_mcp_clients()
-
-        # Get available tools
-        available_tools = get_available_tools()
-        logger.info(f"Available tools: {available_tools}")
-
         # Get the agent
         logger.info("Creating travel agent")
         agent = get_agent()
