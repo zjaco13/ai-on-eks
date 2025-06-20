@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "weather": {
+      "command": "uv",
+      "args": ["run","agent_mcp_server.py", "--transport","stdio"]
+    },
+    "strands": {
+      "command": "uvx",
+      "timeout": 60000,
+      "args": [
+        "strands-agents-mcp-server@latest"
+      ]
+    }
+  }
+}

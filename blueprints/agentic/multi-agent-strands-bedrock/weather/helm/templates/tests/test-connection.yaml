@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "agent.fullname" . }}-test-connection"
+  labels:
+    {{- include "agent.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: mcp
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "agent.fullname" . }}:{{ .Values.agent.mcp.port }}']
+    - name: a2a
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "agent.fullname" . }}:{{ .Values.agent.a2a.port }}']
+  restartPolicy: Never
