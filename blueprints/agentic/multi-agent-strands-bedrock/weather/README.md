@@ -319,6 +319,7 @@ Deploy the weather agent using Helm:
 helm upgrade ${KUBERNETES_APP_NAME} helm --install \
   --set serviceAccount.name=${KUBERNETES_SERVICE_ACCOUNT} \
   --set image.repository=${ECR_REPO_URI_WEATHER} \
+  --set image.pullPolicy=Always \
   --set image.tag=latest
 ```
 
@@ -358,9 +359,9 @@ kubectl logs deployment/${KUBERNETES_APP_NAME}
 
 You should see:
 ```
-Starting weather MCP server...
-INFO:     Started server process [1]
-INFO:     Uvicorn running on http://0.0.0.0:8080
+INFO - Starting Weather Agent Dual Server...
+INFO - MCP Server will run on port 8080 with streamable-http transport
+INFO - A2A Server will run on port 9000
 ```
 
 #### Step 3: Verify Service
@@ -483,30 +484,19 @@ uv sync
 
 #### Run interactive mode
 ```bash
-uv run agent_interactive.py
-```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-interactive
+uv run interactive
 ```
 
-#### Run as mcp server streamable-http
+#### Run as mcp server streamable-http or stdio
 ```bash
-uv run agent_mcp_server.py
+uv run mcp-server --transport streamable-http
 ```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-mcp-server
-```
+
 Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
 
 #### Run as a2a server
 ```bash
 uv run agent_a2a_server.py
-```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-a2a-server
 ```
 
 #### Run the a2a client
@@ -533,7 +523,7 @@ docker run -it \
 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
-agent weather-agent-interactive
+agent interactive
 ```
 Type a question, to exit use `/quit`
 
@@ -548,7 +538,7 @@ docker run \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
 -e DEBUG=1 \
-agent weather-agent-mcp-server
+agent mcp-server
 ```
 Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
 
@@ -562,6 +552,21 @@ docker run \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
 -e DEBUG=1 \
-agent weather-agent-a2a-server
+agent a2a-server
 ```
 Then test in another terminal running `uv run test_a2a_client.py`
+
+
+Run the agent as multi-server mcp and a2a
+```bash
+docker run \
+-v $HOME/.aws:/app/.aws \
+-p 9000:9000 \
+-e AWS_REGION=${AWS_REGION} \
+-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+-e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
+-e DEBUG=1 \
+agent agent
+```
+Use mcpinspector or a2a client to test

@@ -96,7 +96,7 @@ def _create_mcp_client() -> MCPClient:
         lambda: stdio_client(
             StdioServerParameters(
                 command="uvx",
-                args=["--from", ".", "--directory", mcp_server_location, "weather-mcp"]
+                args=["--from", ".", "--directory", mcp_server_location, "mcp-server", "--transport","stdio"]
             )
         )
     )
