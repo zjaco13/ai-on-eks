@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-"weather-mcp" = "server:main"
+"mcp-server" = "server:main"
 
 [build-system]
 requires = ["hatchling"]

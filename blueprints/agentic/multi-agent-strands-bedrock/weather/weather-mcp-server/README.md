@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server that provides weather forecasting capabili
 - **Weather Alerts**: Retrieve weather alerts for US states
 - **Automatic Geocoding**: Automatically converts location names to coordinates
 - **MCP Integration**: Seamlessly integrates with Amazon Q and other MCP clients
+- **Multiple Transport Options**: Supports both stdio and streamable-http transports
 
 ## Prerequisites
 
@@ -51,6 +52,24 @@ source .venv/bin/activate
 uv sync
 ```
 
+## Running the Server
+
+The weather MCP server supports two transport methods:
+
+Run with streamable-http transport (recommended for web integration)
+```bash
+uv run server.py --transport streamable-http
+```
+Run with stdio transport (for command-line integration)
+```bash
+uv run server.py --transport stdio
+```
+
+Use MCP Ispector to test the mcp server
+```bash
+npx @modelcontextprotocol/inspector
+```
+
 
 ## Amazon Q Integration
 
@@ -63,11 +82,17 @@ Create or update your Amazon Q MCP configuration file at `~/.config/amazonq/mcp.
   "mcpServers": {
     "weather": {
       "command": "uvx",
-      "args": ["--no-cache", "--from", ".", "--directory", ".", "weather-mcp"]
+      "args": ["--from", ".", "--directory", "/path/to/weather-mcp-server", "mcp-server", "--transport", "stdio"]
     }
   }
 }
 ```
+
+**Note:** Replace `/path/to/weather-mcp-server` with the actual path to your weather MCP server directory.
+
+### 2. Restart Amazon Q
+
+After updating the configuration, restart Amazon Q to load the new MCP server.
 
 
 ### 3. Using Weather Tools in Amazon Q
