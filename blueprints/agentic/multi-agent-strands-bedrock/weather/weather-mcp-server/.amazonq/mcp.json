@@ -22,9 +22,14 @@
         "FASTMCP_LOG_LEVEL": "ERROR"
       }
     },
-    "amzn-mcp": {
-      "disabled": true,
-      "command": "amzn-mcp"
+    "awslabsfinch-mcp-server": {
+      "disabled": false,
+      "command": "uvx",
+      "timeout": 120000000,
+      "args": [
+        "awslabs.finch-mcp-server@latest",
+        "--enable-aws-resource-write"
+      ]
     },
     "awslabs.code-doc-gen-mcp-server": {
       "disabled": true,
@@ -71,18 +76,13 @@
         "awslabs.nova-canvas-mcp-server@latest"
       ]
     },
+    "amzn-mcp": {
+      "disabled": true,
+      "command": ""
+    },
     "builder-mcp": {
       "disabled": true,
-      "command": "builder-mcp"
-    },
-    "awslabsfinch-mcp-server": {
-      "disabled": true,
-      "command": "uvx",
-      "timeout": 120000000,
-      "args": [
-        "awslabs.finch-mcp-server@latest",
-        "--enable-aws-resource-write"
-      ]
+      "command": ""
     }
   }
 }
