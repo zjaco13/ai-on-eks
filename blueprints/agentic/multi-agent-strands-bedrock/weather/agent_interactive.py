@@ -1,8 +1,12 @@
-from agent import weather_assistant as agent
-from rich.markdown import Markdown
+"""Interactive command-line interface for the Weather Agent."""
+
 from rich.console import Console
+from rich.markdown import Markdown
+
+from agent import get_weather_agent as get_agent
 
 def interactive_agent():
+    """Run an interactive command-line interface for the Weather Agent."""
     print("\n📁 Weather Agent\n")
     print("Ask a question about the weather forecast or alerts.\n\n")
 
@@ -11,25 +15,21 @@ def interactive_agent():
     print("- Any weather alerts for Las Vegas today?")
     print("Type 'exit' to quit.")
 
+    agent = get_agent()
+
     # Interactive loop
     while True:
         try:
             user_input = input("\n> ")
-            if user_input.lower() == "exit":
+            if user_input.lower() == "/quit":
                 print("\nGoodbye! 👋")
                 break
 
-            # response = interactive_agent(
-            #     user_input,
-            # )
             response = agent(user_input)
 
-            # Extract and print only the relevant content from the specialized agent's response
-            #content = str(response)
-            #print(content)
             print("\n\n=== RENDERED MARKDOWN ===\n")
             console = Console()
-            console.print(Markdown(response))
+            console.print(Markdown(str(response)))
             print("\n=== END OF MARKDOWN ===\n")
 
         except KeyboardInterrupt:
@@ -38,6 +38,7 @@ def interactive_agent():
         except Exception as e:
             print(f"\nAn error occurred: {str(e)}")
             print("Please try asking a different question.")
+
 
 if __name__ == "__main__":
     interactive_agent()

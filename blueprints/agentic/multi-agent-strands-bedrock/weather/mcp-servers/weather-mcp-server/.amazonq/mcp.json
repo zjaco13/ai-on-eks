@@ -10,14 +10,6 @@
         "stdio"
       ]
     },
-    "strands": {
-      "disabled": false,
-      "command": "uvx",
-      "timeout": 60000,
-      "args": [
-        "strands-agents-mcp-server@latest"
-      ]
-    },
     "awslabs.eks-mcp-server": {
       "disabled": false,
       "command": "uvx",

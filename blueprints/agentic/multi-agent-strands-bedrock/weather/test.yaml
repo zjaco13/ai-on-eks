@@ -1,0 +1,110 @@
+---
+# Source: agent/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: weather-agent
+  labels:
+    helm.sh/chart: agent-1.0.0
+    app.kubernetes.io/name: agent
+    app.kubernetes.io/instance: weather-agent
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: agent/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: weather-agent
+  labels:
+    helm.sh/chart: agent-1.0.0
+    app.kubernetes.io/name: agent
+    app.kubernetes.io/instance: weather-agent
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: mcp
+      protocol: TCP
+      name: mcp
+    - port: 9000
+      targetPort: a2a
+      protocol: TCP
+      name: a2a
+  selector:
+    app.kubernetes.io/name: agent
+    app.kubernetes.io/instance: weather-agent
+---
+# Source: agent/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-agent
+  labels:
+    helm.sh/chart: agent-1.0.0
+    app.kubernetes.io/name: agent
+    app.kubernetes.io/instance: weather-agent
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agent
+      app.kubernetes.io/instance: weather-agent
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: agent-1.0.0
+        app.kubernetes.io/name: agent
+        app.kubernetes.io/instance: weather-agent
+        app.kubernetes.io/version: "1.0.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: weather-agent
+      containers:
+        - name: agent
+          image: "015299085168.dkr.ecr.us-west-2.amazonaws.com/agents-on-eks/weather-agent:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MCP_PORT
+              value: "8080"
+            - name: A2A_PORT
+              value: "9000"
+          ports:
+            - name: mcp
+              containerPort: 8080
+              protocol: TCP
+            - name: a2a
+              containerPort: 9000
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: http
+          readinessProbe:
+            tcpSocket:
+              port: http
+---
+# Source: agent/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "weather-agent-test-connection"
+  labels:
+    helm.sh/chart: agent-1.0.0
+    app.kubernetes.io/name: agent
+    app.kubernetes.io/instance: weather-agent
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['weather-agent:80']
+  restartPolicy: Never

@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "weather-mcp-stdio": {
+      "disabled": false,
+      "timeout": 60000,
+      "command": "uvx",
+      "args": [
+        "--from",
+        ".",
+        "--directory",
+        "mcp-servers/weather-mcp-server",
+        "mcp-server",
+        "--transport",
+        "stdio"
+      ],
+      "env": {
+        "DEBUG": "1",
+        "LOG_LEVEL": "INFO"
+      }
+    },
+    "weather-mcp-http": {
+      "disabled": true,
+      "timeout": 60000,
+      "url": "http://weather-mcp-server:8080/mcp"
+    }
+  }
+}

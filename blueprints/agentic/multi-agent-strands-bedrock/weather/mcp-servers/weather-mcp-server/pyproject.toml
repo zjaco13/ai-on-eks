@@ -1,26 +1,17 @@
 [project]
-name = "weather-agent"
+name = "weather-mcp-server"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-# mitigate https://github.com/strands-agents/sdk-python/commit/5fab010715fa26bc2bd68505367dbb7c09e0e3ed
 dependencies = [
-    "a2a-sdk>=0.2.8",
+    "httpx>=0.28.1",
     "mcp[cli]>=1.9.4",
-    "strands-agents>=0.1.8",
-    "strands-agents-tools>=0.1.6",
-    "markdown",
-    "rich",
-    "uv==0.7.11"
+    "geopy>=2.4.1"
 ]
 
 [project.scripts]
-"mcp-server"  = "main:main_mcp_server"
-"a2a-server"  = "main:main_a2a_server"
-"interactive" = "main:main_interactive"
-"agent" = "main:servers"
-
+"mcp-server" = "server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -28,9 +19,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
