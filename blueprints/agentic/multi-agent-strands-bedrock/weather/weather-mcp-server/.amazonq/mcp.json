@@ -5,7 +5,7 @@
       "command": "uv",
       "args": [
         "run",
-        "server.py",
+        "mcp-server",
         "--transport",
         "stdio"
       ]

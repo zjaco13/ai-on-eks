@@ -148,13 +148,13 @@ export BEDROCK_PODIDENTITY_IAM_ROLE=agents-on-eks-bedrock-role
 
 # Kubernetes Configuration
 export KUBERNETES_NAMESPACE=default
-export KUBERNETES_SERVICE_ACCOUNT=weather-agent
 export KUBERNETES_APP_NAME=weather-agent
+export KUBERNETES_SERVICE_ACCOUNT=weather-agent
 
 # ECR Configuration
-export ECR_REPO_WEATHER=agents-on-eks/weather-agent
+export ECR_REPO_NAME=agents-on-eks/weather-agent
 export ECR_REPO_HOST=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-export ECR_REPO_URI_WEATHER=${ECR_REPO_HOST}/${ECR_REPO_WEATHER}
+export ECR_REPO_URI=${ECR_REPO_HOST}/${ECR_REPO_NAME}
 ```
 
 > **Note:** Make sure you have access to the Amazon Bedrock model `us.anthropic.claude-3-7-sonnet-20250219-v1:0` in your AWS account. You can change the model by updating the `BEDROCK_MODEL_ID` variable.
@@ -258,7 +258,7 @@ aws eks create-pod-identity-association \
 Create a private ECR repository for the weather agent image:
 
 ```bash
-aws ecr create-repository --repository-name ${ECR_REPO_WEATHER}
+aws ecr create-repository --repository-name ${ECR_REPO_NAME}
 ```
 
 #### Step 2: Authenticate Docker with ECR
@@ -290,7 +290,7 @@ Build the image for both AMD64 and ARM64 architectures:
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t ${ECR_REPO_URI_WEATHER}:latest \
+  -t ${ECR_REPO_URI}:latest \
   --push .
 ```
 
@@ -304,7 +304,7 @@ This command will:
 Confirm the image supports both architectures:
 
 ```bash
-docker manifest inspect ${ECR_REPO_URI_WEATHER}:latest
+docker manifest inspect ${ECR_REPO_URI}:latest
 ```
 
 You should see entries for both `linux/amd64` and `linux/arm64`.
@@ -318,7 +318,7 @@ Deploy the weather agent using Helm:
 ```bash
 helm upgrade ${KUBERNETES_APP_NAME} helm --install \
   --set serviceAccount.name=${KUBERNETES_SERVICE_ACCOUNT} \
-  --set image.repository=${ECR_REPO_URI_WEATHER} \
+  --set image.repository=${ECR_REPO_URI} \
   --set image.pullPolicy=Always \
   --set image.tag=latest
 ```
@@ -384,7 +384,7 @@ Forward the MCP server port to your local machine:
 kubectl port-forward service/${KUBERNETES_APP_NAME} 8080:mcp
 ```
 
-Now you can connect with the MCP client to `http://localhost:8080`.
+Now you can connect with the MCP client to `http://localhost:8080/mcp`.
 
 Use the MCP Inspector to test the connection:
 
@@ -427,7 +427,7 @@ helm uninstall ${KUBERNETES_APP_NAME}
 #### Step 2: Delete ECR Repository
 
 ```bash
-aws ecr delete-repository --repository-name ${ECR_REPO_WEATHER} --force
+aws ecr delete-repository --repository-name ${ECR_REPO_NAME} --force
 ```
 
 #### Step 3: Delete EKS Cluster
@@ -492,7 +492,7 @@ uv run interactive
 uv run mcp-server --transport streamable-http
 ```
 
-Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
+Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with `http://localhost:8080/mcp`
 
 #### Run as a2a server
 ```bash
@@ -540,7 +540,7 @@ docker run \
 -e DEBUG=1 \
 agent mcp-server
 ```
-Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
+Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with `http://localhost:8080/mcp`
 
 Run the agent as a2a server
 ```bash
