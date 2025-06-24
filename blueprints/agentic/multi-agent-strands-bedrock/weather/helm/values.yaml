@@ -19,6 +19,8 @@ agent:
   env:
   - name: BEDROCK_MODEL_ID
     value: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+  # - name: MCP_SERVER_URL
+  #   value: http://weather-mcp-server:8080/mcp
   mcp:
     port: 8080
   a2a:
