@@ -95,12 +95,10 @@ Remember: Your value comes from coordinating specialized information from expert
 
 # Get available tools from MCP servers
 
-def get_agent() -> Agent:
-    logger.info("Creating travel agent with Bedrock model")
-    model_id = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-3-7-sonnet-20250219-v1:0")
-    logger.info(f"Using Bedrock model: {model_id}")
-
+def main():
+    logger.info("Starting Travel Planning Assistant")
     mcp_clients["Weather"] = MCPClient(lambda url=WEATHER_URL: streamablehttp_client(url))
+    model_id = os.getenv("BEDROCK_MODEL_ID", "us.anthropic.claude-3-7-sonnet-20250219-v1:0")
     try:
         bedrock_model = BedrockModel(model_id=model_id)
         logger.info("Successfully initialized Bedrock model")
@@ -114,47 +112,34 @@ def get_agent() -> Agent:
             logger.info(f"tools: {weather_tools}")
             travel_agent.tool_registry.process_tools(weather_tools)
 
-        logger.info("Travel agent successfully created with system prompt and weather tool")
-        return travel_agent
+            logger.info("Travel agent successfully created with system prompt and weather tool")
+
+            # Interactive session
+            console = Console()
+            console.print("[bold green]Travel Planning Assistant[/bold green]")
+            console.print("Ask about travel plans, weather, etc. Type 'exit' to quit.")
+            logger.info("Starting interactive session")
+
+            while True:
+                user_input = input("\nYou: ")
+                if user_input.lower() in ["exit", "quit"]:
+                    logger.info("User requested to exit")
+                    break
+
+                # Process the user input with the agent
+                logger.info(f"Processing user input: '{user_input}'")
+                try:
+                    response = travel_agent(user_input)
+                    logger.info("Successfully generated response")
+                    console.print(f"\n[bold blue]Assistant:[/bold blue] {response}")
+                except Exception as e:
+                    logger.error(f"Error generating response: {e}", exc_info=True)
+                    console.print(f"\n[bold red]Error:[/bold red] Failed to generate response: {str(e)}")
+
+            logger.info("Interactive session ended")
     except Exception as e:
         logger.error(f"Error creating travel agent: {e}", exc_info=True)
         raise
-
-def main():
-    logger.info("Starting Travel Planning Assistant")
-
-    try:
-        # Get the agent
-        logger.info("Creating travel agent")
-        agent = get_agent()
-        logger.info("Travel agent created successfully")
-
-        # Interactive session
-        console = Console()
-        console.print("[bold green]Travel Planning Assistant[/bold green]")
-        console.print("Ask about travel plans, weather, etc. Type 'exit' to quit.")
-        logger.info("Starting interactive session")
-
-        while True:
-            user_input = input("\nYou: ")
-            if user_input.lower() in ["exit", "quit"]:
-                logger.info("User requested to exit")
-                break
-
-            # Process the user input with the agent
-            logger.info(f"Processing user input: '{user_input}'")
-            try:
-                response = agent(user_input)
-                logger.info("Successfully generated response")
-                console.print(f"\n[bold blue]Assistant:[/bold blue] {response}")
-            except Exception as e:
-                logger.error(f"Error generating response: {e}", exc_info=True)
-                console.print(f"\n[bold red]Error:[/bold red] Failed to generate response: {str(e)}")
-
-        logger.info("Interactive session ended")
-    except Exception as e:
-        logger.error(f"Error in main function: {e}", exc_info=True)
-        print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     logger.info("Application starting")
