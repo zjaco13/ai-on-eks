@@ -183,7 +183,7 @@ This command will:
 
 Verify the cluster is running:
 ```bash
-kubectl get nodes
+kubectl get pods -A
 ```
 
 ---
@@ -496,7 +496,7 @@ Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in th
 
 #### Run as a2a server
 ```bash
-uv run agent_a2a_server.py
+uv run a2a-server
 ```
 
 #### Run the a2a client

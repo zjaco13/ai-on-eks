@@ -167,7 +167,7 @@ This command will:
 
 Verify the cluster is running:
 ```bash
-kubectl get nodes
+kubectl get pods -A
 ```
 
 ---

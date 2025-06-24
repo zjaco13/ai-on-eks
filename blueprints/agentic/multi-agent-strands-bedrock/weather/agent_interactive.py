@@ -3,8 +3,7 @@
 from rich.console import Console
 from rich.markdown import Markdown
 
-from agent import weather_assistant as agent
-
+from agent import get_weather_agent as get_agent
 
 def interactive_agent():
     """Run an interactive command-line interface for the Weather Agent."""
@@ -15,6 +14,8 @@ def interactive_agent():
     print("- What's the weather in Orlando, Florida this week?")
     print("- Any weather alerts for Las Vegas today?")
     print("Type 'exit' to quit.")
+
+    agent = get_agent()
 
     # Interactive loop
     while True:
@@ -28,7 +29,7 @@ def interactive_agent():
 
             print("\n\n=== RENDERED MARKDOWN ===\n")
             console = Console()
-            console.print(Markdown(response))
+            console.print(Markdown(str(response)))
             print("\n=== END OF MARKDOWN ===\n")
 
         except KeyboardInterrupt:
