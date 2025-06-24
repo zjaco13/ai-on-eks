@@ -69,7 +69,6 @@ RUN pip install uv==0.7.11
 # Get the project from the uv layer
 COPY --from=uv --chown=app:app /root/.local /root/.local
 COPY --from=uv --chown=app:app /app/.venv /app/.venv
-COPY --from=uv --chown=app:app /app/mcp-servers /app/mcp-servers
 
 # Get healthcheck script
 #COPY ./docker-healthcheck.sh /usr/local/bin/docker-healthcheck.sh
@@ -81,4 +80,4 @@ USER app
 
 # When running the container, add --db-path and a bind mount to the host's db file
 #HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "docker-healthcheck.sh" ]
-CMD ["agent"]
+CMD ["mcp-server"]

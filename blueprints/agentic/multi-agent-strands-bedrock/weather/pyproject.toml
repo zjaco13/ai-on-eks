@@ -16,10 +16,10 @@ dependencies = [
 ]
 
 [project.scripts]
-"weather-agent-mcp-server"  = "main:main_mcp_server"
-"weather-agent-a2a-server"  = "main:main_a2a_server"
-"weather-agent-interactive" = "main:main_interactive"
-"weather-agent-dual-server" = "main:main_dual_server"
+"mcp-server"  = "main:main_mcp_server"
+"a2a-server"  = "main:main_a2a_server"
+"interactive" = "main:main_interactive"
+"agent" = "main:servers"
 
 
 [build-system]

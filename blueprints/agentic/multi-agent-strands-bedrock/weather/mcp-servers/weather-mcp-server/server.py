@@ -1,4 +1,6 @@
+import os
 from typing import Any
+import argparse
 import httpx
 from mcp.server.fastmcp import FastMCP
 from geopy.geocoders import Nominatim
@@ -123,8 +125,20 @@ async def get_forecast(location: str) -> str:
 
 def main():
     """Main entry point for the weather MCP server."""
-    print("Starting weather MCP server...")
-    mcp.run(transport='stdio')
+    parser = argparse.ArgumentParser(description="Weather MCP Server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "streamable-http"],
+        default="streamable-http",
+        help="Transport method to use (default: streamable-http)"
+    )
+
+    args = parser.parse_args()
+
+    print(f"Starting weather MCP server with transport: {args.transport}")
+    mcp.settings.port = int(os.getenv("MCP_PORT", "8080"))
+    mcp.settings.host = '0.0.0.0'
+    mcp.run(transport=args.transport)
 
 if __name__ == "__main__":
     main()

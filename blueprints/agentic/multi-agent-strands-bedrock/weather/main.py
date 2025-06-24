@@ -41,7 +41,7 @@ def main_interactive():
     interactive_agent()
 
 
-def main_dual_server():
+def servers():
     """Start both MCP and A2A servers concurrently."""
     logger.info("Starting Weather Agent Dual Server...")
     logger.info(f"MCP Server will run on port {os.getenv('MCP_PORT', '8080')} with streamable-http transport")

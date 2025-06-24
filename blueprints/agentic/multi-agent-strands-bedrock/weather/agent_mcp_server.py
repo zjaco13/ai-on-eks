@@ -5,10 +5,12 @@ import os
 
 from mcp.server.fastmcp import FastMCP
 
-from agent import weather_assistant as agent
+from agent import get_weather_agent as get_agent
 
 # Initialize FastMCP server
 mcp = FastMCP("weather-agent")
+
+agent = get_agent()
 
 
 @mcp.tool()
@@ -22,7 +24,7 @@ async def weather(query: str) -> str:
     Returns:
         A response to the user's weather query
     """
-    return agent(query)
+    return str(agent(query))
 
 
 def weather_mcp_server():

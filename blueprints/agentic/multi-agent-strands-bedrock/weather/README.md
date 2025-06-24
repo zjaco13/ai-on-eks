@@ -148,13 +148,13 @@ export BEDROCK_PODIDENTITY_IAM_ROLE=agents-on-eks-bedrock-role
 
 # Kubernetes Configuration
 export KUBERNETES_NAMESPACE=default
-export KUBERNETES_SERVICE_ACCOUNT=weather-agent
 export KUBERNETES_APP_NAME=weather-agent
+export KUBERNETES_SERVICE_ACCOUNT=weather-agent
 
 # ECR Configuration
-export ECR_REPO_WEATHER=agents-on-eks/weather-agent
+export ECR_REPO_NAME=agents-on-eks/weather-agent
 export ECR_REPO_HOST=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-export ECR_REPO_URI_WEATHER=${ECR_REPO_HOST}/${ECR_REPO_WEATHER}
+export ECR_REPO_URI=${ECR_REPO_HOST}/${ECR_REPO_NAME}
 ```
 
 > **Note:** Make sure you have access to the Amazon Bedrock model `us.anthropic.claude-3-7-sonnet-20250219-v1:0` in your AWS account. You can change the model by updating the `BEDROCK_MODEL_ID` variable.
@@ -183,7 +183,7 @@ This command will:
 
 Verify the cluster is running:
 ```bash
-kubectl get nodes
+kubectl get pods -A
 ```
 
 ---
@@ -258,7 +258,7 @@ aws eks create-pod-identity-association \
 Create a private ECR repository for the weather agent image:
 
 ```bash
-aws ecr create-repository --repository-name ${ECR_REPO_WEATHER}
+aws ecr create-repository --repository-name ${ECR_REPO_NAME}
 ```
 
 #### Step 2: Authenticate Docker with ECR
@@ -290,7 +290,7 @@ Build the image for both AMD64 and ARM64 architectures:
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t ${ECR_REPO_URI_WEATHER}:latest \
+  -t ${ECR_REPO_URI}:latest \
   --push .
 ```
 
@@ -304,7 +304,7 @@ This command will:
 Confirm the image supports both architectures:
 
 ```bash
-docker manifest inspect ${ECR_REPO_URI_WEATHER}:latest
+docker manifest inspect ${ECR_REPO_URI}:latest
 ```
 
 You should see entries for both `linux/amd64` and `linux/arm64`.
@@ -318,7 +318,8 @@ Deploy the weather agent using Helm:
 ```bash
 helm upgrade ${KUBERNETES_APP_NAME} helm --install \
   --set serviceAccount.name=${KUBERNETES_SERVICE_ACCOUNT} \
-  --set image.repository=${ECR_REPO_URI_WEATHER} \
+  --set image.repository=${ECR_REPO_URI} \
+  --set image.pullPolicy=Always \
   --set image.tag=latest
 ```
 
@@ -358,9 +359,9 @@ kubectl logs deployment/${KUBERNETES_APP_NAME}
 
 You should see:
 ```
-Starting weather MCP server...
-INFO:     Started server process [1]
-INFO:     Uvicorn running on http://0.0.0.0:8080
+INFO - Starting Weather Agent Dual Server...
+INFO - MCP Server will run on port 8080 with streamable-http transport
+INFO - A2A Server will run on port 9000
 ```
 
 #### Step 3: Verify Service
@@ -383,7 +384,7 @@ Forward the MCP server port to your local machine:
 kubectl port-forward service/${KUBERNETES_APP_NAME} 8080:mcp
 ```
 
-Now you can connect with the MCP client to `http://localhost:8080`.
+Now you can connect with the MCP client to `http://localhost:8080/mcp`.
 
 Use the MCP Inspector to test the connection:
 
@@ -426,7 +427,7 @@ helm uninstall ${KUBERNETES_APP_NAME}
 #### Step 2: Delete ECR Repository
 
 ```bash
-aws ecr delete-repository --repository-name ${ECR_REPO_WEATHER} --force
+aws ecr delete-repository --repository-name ${ECR_REPO_NAME} --force
 ```
 
 #### Step 3: Delete EKS Cluster
@@ -483,30 +484,19 @@ uv sync
 
 #### Run interactive mode
 ```bash
-uv run agent_interactive.py
-```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-interactive
+uv run interactive
 ```
 
-#### Run as mcp server streamable-http
+#### Run as mcp server streamable-http or stdio
 ```bash
-uv run agent_mcp_server.py
+uv run mcp-server --transport streamable-http
 ```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-mcp-server
-```
-Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
+
+Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with `http://localhost:8080/mcp`
 
 #### Run as a2a server
 ```bash
-uv run agent_a2a_server.py
-```
-using uvx
-```bash
-uvx --no-cache --from . --directory . weather-agent-a2a-server
+uv run a2a-server
 ```
 
 #### Run the a2a client
@@ -533,7 +523,7 @@ docker run -it \
 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
-agent weather-agent-interactive
+agent interactive
 ```
 Type a question, to exit use `/quit`
 
@@ -548,9 +538,9 @@ docker run \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
 -e DEBUG=1 \
-agent weather-agent-mcp-server
+agent mcp-server
 ```
-Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with http://localhost:8080/mcp
+Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in the UI use streamable-http with `http://localhost:8080/mcp`
 
 Run the agent as a2a server
 ```bash
@@ -562,6 +552,21 @@ docker run \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
 -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
 -e DEBUG=1 \
-agent weather-agent-a2a-server
+agent a2a-server
 ```
 Then test in another terminal running `uv run test_a2a_client.py`
+
+
+Run the agent as multi-server mcp and a2a
+```bash
+docker run \
+-v $HOME/.aws:/app/.aws \
+-p 9000:9000 \
+-e AWS_REGION=${AWS_REGION} \
+-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+-e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
+-e DEBUG=1 \
+agent agent
+```
+Use mcpinspector or a2a client to test
