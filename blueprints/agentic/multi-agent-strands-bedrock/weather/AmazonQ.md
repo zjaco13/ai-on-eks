@@ -25,7 +25,8 @@ weather/
 ├── main.py                  # Entry points + dual server orchestrator
 ├── Dockerfile               # Multi-arch container (agent)
 ├── helm/                    # Kubernetes deployment charts
-├── weather-mcp-server/      # MCP tool definitions
+├── mcp-servers/             # MCP tool definitions
+│   └── weather-mcp-server/  # Weather MCP server
 ├── pyproject.toml          # Entry points configuration
 ├── README.md               # Human-readable deployment tutorial
 └── AmazonQ.md              # This file - AI Agent technical reference

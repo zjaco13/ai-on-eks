@@ -91,7 +91,7 @@ def _create_mcp_client() -> MCPClient:
             lambda: streamablehttp_client(mcp_server_url)
         )
 
-    mcp_server_location = os.getenv("MCP_SERVER_LOCATION","weather-mcp-server")
+    mcp_server_location = os.getenv("MCP_SERVER_LOCATION","mcp-servers/weather-mcp-server")
     return MCPClient(
         lambda: stdio_client(
             StdioServerParameters(
