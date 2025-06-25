@@ -16,6 +16,9 @@ from a2a.types import (
 )
 from strands.models import BedrockModel
 from strands.types.tools import ToolUse, ToolResult
+
+from multiagent.a2a.agent import A2AAgent
+from multiagent.a2a.tools import A2ARemoteTool
 WEATHER_TOOL_SPEC = {
     "name": "get_weather",
     "description": "Get detailed weather information for a specific location and time period",
@@ -121,116 +124,7 @@ agents_info: str = ""
 # Global HTTP client that stays open
 http_client = None
 
-# Initialize agents
-async def init_agents(agent_addresses: List[str]):
-    global remote_connections, cards, agents_info, http_client
-
-    logger.info(f"Initializing connections to {len(agent_addresses)} agents")
-
-    # Create a persistent HTTP client
-    timeout = httpx.Timeout(60.0)
-    http_client = httpx.AsyncClient(timeout=timeout)
-
-    for address in agent_addresses:
-        logger.info(f"Attempting to connect to agent at: {address}")
-        resolver = A2ACardResolver(http_client, address)
-        try:
-            logger.debug(f"Fetching agent card from {address}")
-            card = await resolver.get_agent_card()
-            logger.info(f"Successfully retrieved agent card for: {card.name}")
-
-            # Create A2A client with the persistent HTTP client
-            remote_connections[card.name] = A2AClient(http_client, card, address)
-            cards[card.name] = card
-            logger.info(f"Successfully established connection to agent: {card.name}")
-
-        except httpx.ConnectError as e:
-            logger.error(f"Connection error when connecting to {address}: {e}")
-            print(f"Error: Failed to get Agent Card from {address}: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error when initializing connection to {address}: {e}", exc_info=True)
-            print(f"Error: Failed to initialize connection for {address}: {e}")
-
-    agent_info = [
-        json.dumps({"name": card.name, "description": card.description}) for card in cards.values()
-    ]
-    agents_info = "\n".join(agent_info) if agent_info else "No agents found"
-
-    if agent_info:
-        logger.info(f"Successfully connected to {len(agent_info)} agents")
-        for agent_data in agent_info:
-            logger.info(f"Connected agent: {agent_data}")
-    else:
-        logger.warning("No agents were successfully connected")
-
-@tool
-def get_weather(task: str) -> str:
-    """Send a message to another AI Agent that can query the Weather API for accurate information asking for specific weather information for the location given by the user
-
-    Args:
-        task: The message to send to the Weather AI Agent
-    Returns:
-        A helpful response addressing the query from the agent
-    """
-    try:
-        # Use the current event loop with nest_asyncio
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(send_message("Weather Agent", task))
-        logger.info("Weather information successfully retrieved")
-        return result
-    except Exception as e:
-        logger.error(f"Error getting weather information: {e}", exc_info=True)
-        return f"Error retrieving weather information: {str(e)}"
-
-async def send_message(agent_name: str, task: str):
-    """Send a task to another agent"""
-    logger.info(f"Sending message to agent '{agent_name}': '{task[:50]}...'")
-
-    if agent_name not in remote_connections:
-        logger.error(f"Agent '{agent_name}' not found in remote connections")
-        raise ValueError(f"Agent {agent_name} not found")
-
-    client = remote_connections[agent_name]
-    if not client:
-        logger.error(f"Client not available for agent '{agent_name}'")
-        raise ValueError(f"Client not available for agent {agent_name}")
-
-    id = str(uuid4())
-    logger.debug(f"Generated message ID: {id}")
-
-    payload = {
-        "message": {
-            "role": "user",
-            "parts": [{"kind": "text", "text": task}],
-            "messageId": id,
-        },
-    }
-
-    message = SendMessageRequest(id=id, params=MessageSendParams.model_validate(payload))
-
-    logger.debug(f"Sending request to {agent_name}")
-    try:
-        response = await client.send_message(message)
-        logger.info(f"Received response from {agent_name}")
-
-        # Process and return the response
-        response_dict = json.loads(response.model_dump_json())
-        logger.debug(f"Response structure: {list(response_dict.keys())}")
-
-        # Extract text from response
-        if "result" in response_dict and "parts" in response_dict["result"]:
-            for part in response_dict["result"]["parts"]:
-                if part.get("kind") == "text" and "text" in part:
-                    text_content = part["text"]
-                    logger.info(f"Successfully extracted text content from {agent_name} response")
-                    logger.debug(f"Text content (truncated): {text_content[:100]}..." if len(text_content) > 100 else text_content)
-                    return text_content
-
-        logger.warning(f"No text content found in response from {agent_name}")
-        return "No response received from weather agent"
-    except Exception as e:
-        logger.error(f"Error sending message to {agent_name}: {e}", exc_info=True)
-        raise
+a2a_agent = A2ARemoteTool(WEATHER_URL)
 
 def get_agent() -> Agent:
     logger.info("Creating travel agent with Bedrock model")
@@ -244,7 +138,7 @@ def get_agent() -> Agent:
         travel_agent = Agent(
             model=bedrock_model,
             system_prompt=PROMPT,
-            tools=[get_weather]
+            tools=[a2a_agent]
         )
         logger.info("Travel agent successfully created with system prompt and weather tool")
         return travel_agent
@@ -252,13 +146,9 @@ def get_agent() -> Agent:
         logger.error(f"Error creating travel agent: {e}", exc_info=True)
         raise
 
-async def async_main():
+def main():
     logger.info("Starting Travel Planning Assistant")
-
     try:
-        # Initialize connections
-        await init_agents([WEATHER_URL])
-
         # Get the agent
         logger.info("Creating travel agent")
         agent = get_agent()
@@ -290,22 +180,6 @@ async def async_main():
     except Exception as e:
         logger.error(f"Error in main function: {e}", exc_info=True)
         print(f"Error: {str(e)}")
-    finally:
-        # Clean up the HTTP client
-        if http_client:
-            await http_client.aclose()
-            logger.info("HTTP client closed")
-
-def main():
-    logger.info("Application starting")
-    # Run the async main function
-    try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(async_main())
-        logger.info("Application completed successfully")
-    except Exception as e:
-        logger.critical(f"Unhandled exception in main application: {e}", exc_info=True)
-        print(f"Critical error: {str(e)}")
 
 if __name__ == "__main__":
     main()
