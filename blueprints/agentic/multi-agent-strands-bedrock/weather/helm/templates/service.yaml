@@ -15,5 +15,9 @@ spec:
       targetPort: a2a
       protocol: TCP
       name: a2a
+    - port: {{ .Values.agent.rest.port }}
+      targetPort: rest
+      protocol: TCP
+      name: rest
   selector:
     {{- include "agent.selectorLabels" . | nindent 4 }}

@@ -21,8 +21,16 @@ agent:
     value: us.anthropic.claude-3-7-sonnet-20250219-v1:0
   mcp:
     port: 8080
+    ingress:
+      enabled: false
   a2a:
     port: 9000
+    ingress:
+      enabled: false
+  rest:
+    port: 3000
+    ingress:
+      enabled: false
 
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -98,11 +106,13 @@ resources: {}
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
-  tcpSocket:
-    port: 8080
+  httpGet:
+    path: /health
+    port: 3000
 readinessProbe:
-  tcpSocket:
-    port: 8080
+  httpGet:
+    path: /health
+    port: 3000
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

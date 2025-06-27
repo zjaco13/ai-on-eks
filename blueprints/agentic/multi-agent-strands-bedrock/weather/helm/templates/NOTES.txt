@@ -13,10 +13,25 @@
      NOTE: It may take a few minutes for the LoadBalancer IP to be available.
            You can watch its status by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "agent.fullname" . }}'
   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "agent.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo MCP Server http://$SERVICE_IP:{{ .Values.agent.mcp.port }}/mcp
+  echo "Weather Agent Triple Protocol Server is available at:"
+  echo "  MCP Server: http://$SERVICE_IP:{{ .Values.agent.mcp.port }}/mcp"
+  echo "  A2A Server: http://$SERVICE_IP:{{ .Values.agent.a2a.port }}"
+  echo "  REST API: http://$SERVICE_IP:{{ .Values.agent.rest.port }}/health"
 {{- else if contains "ClusterIP" .Values.service.type }}
   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "agent.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+  echo "Weather Agent Triple Protocol Server is running!"
+  echo ""
+  echo "To access the services, run the following port-forward commands:"
+  echo ""
+  echo "MCP Server (Model Context Protocol):"
+  echo "  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "agent.fullname" . }} {{ .Values.agent.mcp.port }}:mcp"
+  echo "  Then visit: http://127.0.0.1:{{ .Values.agent.mcp.port }}/mcp"
+  echo ""
+  echo "A2A Server (Agent-to-Agent):"
+  echo "  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "agent.fullname" . }} {{ .Values.agent.a2a.port }}:a2a"
+  echo "  Then visit: http://127.0.0.1:{{ .Values.agent.a2a.port }}"
+  echo ""
+  echo "REST API Server:"
+  echo "  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "agent.fullname" . }} {{ .Values.agent.rest.port }}:rest"
+  echo "  Then visit: http://127.0.0.1:{{ .Values.agent.rest.port }}/health"
 {{- end }}

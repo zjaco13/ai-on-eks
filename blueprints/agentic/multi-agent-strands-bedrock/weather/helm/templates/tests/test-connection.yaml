@@ -16,4 +16,8 @@ spec:
       image: busybox
       command: ['wget']
       args: ['{{ include "agent.fullname" . }}:{{ .Values.agent.a2a.port }}']
+    - name: rest
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "agent.fullname" . }}:{{ .Values.agent.rest.port }}/health']
   restartPolicy: Never
