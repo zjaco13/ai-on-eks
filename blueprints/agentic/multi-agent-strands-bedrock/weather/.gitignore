@@ -11,3 +11,4 @@ wheels/
 sessions/
 
 finch_server.log
+triple_server.log

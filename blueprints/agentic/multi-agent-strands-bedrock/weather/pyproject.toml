@@ -13,7 +13,8 @@ dependencies = [
     "markdown",
     "rich",
     "uv==0.7.11",
-    "flask>=3.0.0"
+    "flask>=3.0.0",
+    "requests>=2.31.0"
 ]
 
 [project.scripts]

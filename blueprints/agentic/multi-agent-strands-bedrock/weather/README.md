@@ -409,7 +409,7 @@ uv run test_a2a_client.py
 # Start REST API server
 uv run rest-api
 
-# Run REST API tests (4 comprehensive tests)
+# Run REST API tests (9 comprehensive tests)
 uv run test_rest_api.py
 ```
 
@@ -541,7 +541,7 @@ kubectl port-forward service/weather-agent 8080:8080 9000:9000 3000:3000
 # In separate terminals, run each test client:
 uv run test_mcp_client.py     # Tests MCP Protocol (6 tests)
 uv run test_a2a_client.py     # Tests A2A Protocol (6 tests)
-uv run test_rest_api.py       # Tests REST API (4 tests)
+uv run test_rest_api.py       # Tests REST API (9 tests)
 ```
 
 #### Test Client Features
@@ -568,9 +568,13 @@ Each test client provides:
 - Weather forecast and alert queries
 - Response validation and formatting
 
-**REST API (4 tests):**
+**REST API (9 tests):**
 - Health check endpoint validation
-- Chat endpoint functionality
+- Chat endpoint functionality with session management
+- Session continuity and context awareness
+- Conversation history management
+- Session information retrieval
+- History clearing functionality
 - Error handling (404, 400 responses)
 
 #### Manual Testing
