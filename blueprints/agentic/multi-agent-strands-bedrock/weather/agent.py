@@ -55,12 +55,13 @@ def get_weather_agent() -> Agent:
 
         # Create the weather agent with specific capabilities
         weather_agent = Agent(
+            name="Weather Assistant",
+            description="Weather Assistant that provides weather forecasts and alerts",
             model=bedrock_model,
             system_prompt="""You are Weather Assistant that helps the user with forecasts or alerts:
 - Provide weather forecasts for US cities for the next 3 days if no specific period is mentioned
 - When returning forecasts, always include whether the weather is good for outdoor activities for each day
-- Provide information about weather alerts for US cities when requested
-""",
+- Provide information about weather alerts for US cities when requested""",
             tools=all_tools,
         )
 
