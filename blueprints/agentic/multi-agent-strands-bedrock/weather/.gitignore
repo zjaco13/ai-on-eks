@@ -10,4 +10,4 @@ wheels/
 .venv
 sessions/
 
-finch_server.log
+*.log

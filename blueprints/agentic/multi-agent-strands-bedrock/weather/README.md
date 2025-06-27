@@ -1,6 +1,6 @@
 # AI Agents on EKS
 
-A weather assistant built with Strands Agents, MCP (Model Context Protocol), and A2A (Agent to Agent) for providing weather forecasts and alerts.
+A weather assistant built with Strands Agents, MCP (Model Context Protocol), A2A (Agent to Agent), and REST API for providing weather forecasts and alerts.
 
 
 ## Deploy your first AI Agent on EKS
@@ -51,12 +51,12 @@ graph TB
 
             subgraph "Data Plane"
                 subgraph "Worker Node"
-                    POD[Weather AI Agent<br/>MCP:8080 A2A:9000<br/>MCP Tools: alert, forecast]
+                    POD[Weather AI Agent<br/>MCP:8080 A2A:9000 REST:3000<br/>MCP Tools: alert, forecast]
                 end
             end
 
             subgraph "K8s Resources"
-                SVC[Service<br/>8080 + 9000]
+                SVC[Service<br/>8080 + 9000 + 3000]
                 SA[ServiceAccount]
                 DEPLOY[Deployment]
             end
@@ -71,6 +71,7 @@ graph TB
     subgraph "Client Applications"
         MCP_CLIENT[MCP Client<br/>:8080]
         A2A_CLIENT[A2A Client<br/>:9000]
+        REST_CLIENT[REST Client<br/>:3000]
     end
 
     DEV -->|Build| DOCKER
@@ -87,6 +88,7 @@ graph TB
 
     MCP_CLIENT -->|HTTP :8080| SVC
     A2A_CLIENT -->|HTTP :9000| SVC
+    REST_CLIENT -->|HTTP :3000| SVC
 
     POD -->|Pull| ECR
 
@@ -98,16 +100,17 @@ graph TB
     class ECR,BEDROCK,ROLE,POLICY aws
     class API,ETCD,POD,SVC,SA,DEPLOY k8s
     class DEV,DOCKER,HELM dev
-    class MCP_CLIENT,A2A_CLIENT,CUSTOM_MCP,CUSTOM_A2A client
+    class MCP_CLIENT,A2A_CLIENT,REST_CLIENT client
 ```
 
 **Key Components:**
 
-- **Dual Protocol Support**: Single pod serves both MCP (port 8080) and A2A (port 9000) protocols
+- **Triple Protocol Support**: Single pod serves MCP (port 8080), A2A (port 9000), and REST API (port 3000) protocols
 - **EKS Auto Mode**: Automatic node provisioning and management
 - **Pod Identity**: Secure access to Amazon Bedrock without storing credentials
 - **MCP Protocol**: Standardized interface for AI model communication via HTTP
 - **A2A Protocol**: Agent-to-Agent communication for multi-agent workflows
+- **REST API**: Traditional HTTP REST endpoints for weather queries
 - **Container Registry**: Stores the weather agent container image
 
 ---
@@ -147,9 +150,9 @@ export BEDROCK_MODEL_ID=us.anthropic.claude-3-7-sonnet-20250219-v1:0
 export BEDROCK_PODIDENTITY_IAM_ROLE=agents-on-eks-bedrock-role
 
 # Kubernetes Configuration
-export KUBERNETES_NAMESPACE=default
+export KUBERNETES_APP_NAMESPACE=default
 export KUBERNETES_APP_NAME=weather-agent
-export KUBERNETES_SERVICE_ACCOUNT=weather-agent
+export KUBERNETES_APP_SERVICE_ACCOUNT=weather-agent
 
 # ECR Configuration
 export ECR_REPO_NAME=agents-on-eks/weather-agent
@@ -245,8 +248,8 @@ Link the IAM role to your Kubernetes service account:
 aws eks create-pod-identity-association \
   --cluster ${CLUSTER_NAME} \
   --role-arn arn:aws:iam::${AWS_ACCOUNT_ID}:role/${BEDROCK_PODIDENTITY_IAM_ROLE} \
-  --namespace ${KUBERNETES_NAMESPACE} \
-  --service-account ${KUBERNETES_SERVICE_ACCOUNT}
+  --namespace ${KUBERNETES_APP_NAMESPACE} \
+  --service-account ${KUBERNETES_APP_SERVICE_ACCOUNT}
 ```
 
 ---
@@ -317,7 +320,8 @@ Deploy the weather agent using Helm:
 
 ```bash
 helm upgrade ${KUBERNETES_APP_NAME} helm --install \
-  --set serviceAccount.name=${KUBERNETES_SERVICE_ACCOUNT} \
+  --namespace ${KUBERNETES_APP_NAMESPACE} --create-namespace
+  --set serviceAccount.name=${KUBERNETES_APP_SERVICE_ACCOUNT} \
   --set image.repository=${ECR_REPO_URI} \
   --set image.pullPolicy=Always \
   --set image.tag=latest
@@ -376,6 +380,52 @@ kubectl get ep ${KUBERNETES_APP_NAME}
 
 ### Access the Weather Agent
 
+The weather agent supports three protocols simultaneously. You can access it through port forwarding for development or test it using the provided test clients.
+
+#### Testing with Professional Test Clients
+
+We provide comprehensive test clients for all three protocols:
+
+**MCP Protocol Test Client:**
+```bash
+# Start MCP server
+uv run mcp-server
+
+# Run MCP tests (6 comprehensive tests)
+uv run test_mcp_client.py
+```
+
+**A2A Protocol Test Client:**
+```bash
+# Start A2A server
+uv run a2a-server
+
+# Run A2A tests (6 comprehensive tests)
+uv run test_a2a_client.py
+```
+
+**REST API Test Client:**
+```bash
+# Start REST API server
+uv run rest-api
+
+# Run REST API tests (9 comprehensive tests)
+uv run test_rest_api.py
+```
+
+**Triple Server Testing:**
+```bash
+# Start all three servers simultaneously
+uv run agent
+
+# Test all protocols (in separate terminals)
+uv run test_mcp_client.py     # Tests MCP on port 8080
+uv run test_a2a_client.py     # Tests A2A on port 9000
+uv run test_rest_api.py       # Tests REST API on port 3000
+```
+
+#### Manual Access via Port Forwarding
+
 #### MCP: Port Forward (Development) as MCP server
 
 Forward the MCP server port to your local machine:
@@ -399,7 +449,7 @@ In the UI, use:
 
 #### A2A: Port Forward (Development) as A2A server
 
-Forward the MCP server port to your local machine:
+Forward the A2A server port to your local machine:
 
 ```bash
 kubectl port-forward service/${KUBERNETES_APP_NAME} 9000:a2a
@@ -407,9 +457,35 @@ kubectl port-forward service/${KUBERNETES_APP_NAME} 9000:a2a
 
 Now you can connect with the A2A client to `http://localhost:9000`.
 
-Use the test a2a client script
+Use the test a2a client script:
 ```bash
 uv run test_a2a_client.py
+```
+
+#### REST API: Port Forward (Development) as REST API server
+
+Forward the REST API server port to your local machine:
+
+```bash
+kubectl port-forward service/${KUBERNETES_APP_NAME} 3000:rest
+```
+
+Now you can connect with HTTP clients to `http://localhost:3000`.
+
+Use the test REST API client script:
+```bash
+uv run test_rest_api.py
+```
+
+Or test with curl:
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# Chat with weather assistant
+curl -X POST http://localhost:3000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the weather forecast for Seattle?"}'
 ```
 
 ---
@@ -421,7 +497,8 @@ When you're done with the tutorial, clean up the resources to avoid charges:
 #### Step 1: Uninstall the Application
 
 ```bash
-helm uninstall ${KUBERNETES_APP_NAME}
+helm uninstall ${KUBERNETES_APP_NAME} \
+  --namespace ${KUBERNETES_APP_NAMESPACE}
 ```
 
 #### Step 2: Delete ECR Repository
@@ -447,6 +524,62 @@ aws iam delete-role-policy \
 # Delete the IAM role
 aws iam delete-role --role-name ${BEDROCK_PODIDENTITY_IAM_ROLE}
 ```
+
+---
+
+### Testing Your Deployment
+
+Once your weather agent is deployed, you can verify all three protocols are working correctly using our comprehensive test clients.
+
+#### Automated Testing
+
+**Test All Protocols:**
+```bash
+# Port forward all three services
+kubectl port-forward service/weather-agent 8080:8080 9000:9000 3000:3000
+
+# In separate terminals, run each test client:
+uv run test_mcp_client.py     # Tests MCP Protocol (6 tests)
+uv run test_a2a_client.py     # Tests A2A Protocol (6 tests)
+uv run test_rest_api.py       # Tests REST API (9 tests)
+```
+
+#### Test Client Features
+
+Each test client provides:
+- **Server Readiness Check**: Automatically waits for server availability
+- **Comprehensive Testing**: Covers all major protocol functionality
+- **Professional Output**: Clean, numbered tests with ✅/❌ indicators
+- **Error Handling**: Graceful failure handling with clear messages
+- **Response Preview**: Shows truncated responses for verification
+
+#### Expected Test Results
+
+**MCP Protocol (6 tests):**
+- HTTP connectivity and SSE validation
+- Session initialization and protocol negotiation
+- Tool discovery with parameter enumeration
+- Weather forecast and alert tool execution
+- Complex multi-city weather comparisons
+
+**A2A Protocol (6 tests):**
+- Agent card discovery and capabilities
+- Client initialization and connection
+- Weather forecast and alert queries
+- Response validation and formatting
+
+**REST API (9 tests):**
+- Health check endpoint validation
+- Chat endpoint functionality with session management
+- Session continuity and context awareness
+- Conversation history management
+- Session information retrieval
+- History clearing functionality
+- Error handling (404, 400 responses)
+
+#### Manual Testing
+
+You can also test manually using the methods described in the [Access the Weather Agent](#access-the-weather-agent) section.
 
 ---
 
@@ -499,9 +632,24 @@ Connect your mcp client such as `npx @modelcontextprotocol/inspector` then in th
 uv run a2a-server
 ```
 
+#### Run the mcp client
+```bash
+uv run test_mcp_client.py
+```
+
 #### Run the a2a client
 ```bash
 uv run test_a2a_client.py
+```
+
+#### Run as REST API server
+```bash
+uv run rest-api
+```
+
+#### Run the REST API client
+```bash
+uv run test_rest_api.py
 ```
 
 #### Running in a Container
@@ -556,12 +704,28 @@ agent a2a-server
 ```
 Then test in another terminal running `uv run test_a2a_client.py`
 
-
-Run the agent as multi-server mcp and a2a
+Run the agent as REST API server
 ```bash
 docker run \
 -v $HOME/.aws:/app/.aws \
+-p 3000:3000 \
+-e AWS_REGION=${AWS_REGION} \
+-e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+-e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+-e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \
+-e DEBUG=1 \
+agent rest-api
+```
+Then test in another terminal running `uv run test_rest_api.py`
+
+
+Run the agent as multi-server mcp, a2a, and REST API
+```bash
+docker run \
+-v $HOME/.aws:/app/.aws \
+-p 8080:8080 \
 -p 9000:9000 \
+-p 3000:3000 \
 -e AWS_REGION=${AWS_REGION} \
 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
 -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
@@ -569,4 +733,11 @@ docker run \
 -e DEBUG=1 \
 agent agent
 ```
-Use mcpinspector or a2a client to test
+Use test clients to verify all three protocols:
+```bash
+uv run test_mcp_client.py     # Tests MCP Protocol
+uv run test_a2a_client.py     # Tests A2A Protocol
+uv run test_rest_api.py       # Tests REST API
+```
+
+Or use individual tools: MCP Inspector, A2A client, or REST API client
